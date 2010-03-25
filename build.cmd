@@ -1,0 +1,1 @@
+C:\WINDOWS\Microsoft.NET\Framework\v3.5\MSBuild.exe SIinformer.sln /t:Rebuild /p:Configuration=Release

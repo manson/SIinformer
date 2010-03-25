@@ -1,0 +1,25 @@
+﻿<Window:DarkWindow x:Class="SIinformer.Readers.SIXamlReader"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:Window="clr-namespace:SIinformer.Window" 
+    xmlns:Readers="clr-namespace:SIinformer.Readers" mc:Ignorable="d"
+               Title="XamlReader" TitleAlignment="Center" Style="{StaticResource WindowStyle}" Template="{StaticResource WindowContentTemplate}" 
+               WindowStartupLocation="CenterScreen" MouseLeftButtonDown="NonRectangularWindow_MouseLeftButtonDown" 
+               WindowState="Maximized" BorderBrush="#FF595959" Width="700" Height="600">
+
+    <Window.CommandBindings>
+        <CommandBinding Command="Window:WindowCommands.Minimize" Executed="Minimize_Executed"/>
+        <CommandBinding Command="Window:WindowCommands.Maximize" Executed="Maximize_Executed"/>
+        <CommandBinding Command="Window:WindowCommands.Close" Executed="Close_Executed"/>
+    </Window.CommandBindings>
+
+    <Grid Background="#FF333333" Margin="10,30,10,10">        
+        <Border CornerRadius="5" BorderThickness="1" BorderBrush="#FF606060">
+            <Readers:MyFlowDocumentReader Background="#FF333333" x:Name="XamlReaderControl" Margin="10,10,10,10" Foreground="#FFCCCCCC" FontSize="11" 
+                                Zoom="{Binding Path=FlowDocumentZoom, Mode=OneTime}" ViewingMode="{Binding Path=FlowDocumentReaderViewingMode, Mode=OneTime}"
+                                FontFamily="Comic Sans MS"/>         
+        </Border>
+    </Grid>
+</Window:DarkWindow>

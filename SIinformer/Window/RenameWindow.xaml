@@ -1,0 +1,24 @@
+﻿<Window:DarkWindow x:Class="SIinformer.Window.RenameWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:Window="clr-namespace:SIinformer.Window" mc:Ignorable="d"
+    MaximizeButtonVisibility="Collapsed" MinimizeButtonVisibility="Collapsed"
+    WindowStartupLocation="CenterScreen" TitleAlignment="Center" Style="{StaticResource WindowStyle}" Template="{StaticResource WindowContentTemplate}"
+    MouseLeftButtonDown="NonRectangularWindow_MouseLeftButtonDown" ResizeMode="CanResize" ShowInTaskbar="False" SizeToContent="Height" Width="340">
+    <Window.CommandBindings>
+        <CommandBinding Command="Window:WindowCommands.Close" Executed="Close_Executed"/>
+    </Window.CommandBindings>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+            <TextBox MinWidth="280" Grid.Row="0" Margin ="10,30,10,10" FontSize="13" Height="25" Name="NewName" HorizontalAlignment="Center" VerticalAlignment="Stretch" Focusable="True" TextChanged="NewName_TextChanged" KeyUp="NewName_KeyUp"></TextBox>
+        <StackPanel HorizontalAlignment="Right" Grid.Row="1" Orientation="Horizontal" Margin="0,0,10,10"  >
+            <Button Margin ="2,5,5,5" Height="20" MinWidth="80" IsCancel="True" Click="ButtonCancel_Click">Отмена</Button>
+            <Button x:Name="ButtonOK" Margin ="2,5,5,5" Height="20" MinWidth="80" IsDefault="True" Click="ButtonOK_Click">OK</Button>
+        </StackPanel>
+    </Grid>
+</Window:DarkWindow>

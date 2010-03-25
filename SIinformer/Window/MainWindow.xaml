@@ -1,0 +1,214 @@
+﻿<Window:DarkWindow
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:Window="clr-namespace:SIinformer.Window" 
+    xmlns:Local="clr-namespace:SIinformer" 
+    xmlns:Xaml="clr-namespace:SIinformer.Xaml" 
+    xmlns:Readers="clr-namespace:SIinformer.Readers" mc:Ignorable="d"
+    x:Class="SIinformer.Window.MainWindow" Title="Информатор СИ" 
+    MaximizeButtonVisibility="Collapsed" WindowState="Normal" Closing="DarkWindow_Closing" MouseLeftButtonDown="NonRectangularWindow_MouseLeftButtonDown" 
+    Template="{DynamicResource WindowContentTemplate}" Style="{DynamicResource WindowStyle}" 
+    WindowStartupLocation="Manual" Top="{Binding Path=Top,Mode=TwoWay}" Left="{Binding Path=Left,Mode=TwoWay}" Height="351" Width="359" 
+    IsVisibleChanged="DarkWindow_IsVisibleChanged" SourceInitialized="DarkWindow_SourceInitialized"> 
+
+    <Window:DarkWindow.Resources>
+        <Xaml:ListBoxDataTemplateSelector x:Key="ListBoxDataTemplateSelector"/>
+
+        <!--Пути используются из кода для отображения стрелок направления сортировки-->
+        <Path x:Key="SortDescPath" Fill="#FFFFFFFF" Stretch="Fill" Stroke="#FFFFFFFF" Margin="1,1,1,1" Width="Auto" Height="Auto" RenderTransformOrigin="0.5,0.5" 
+                      Data="M-6,4.5833333 L-4,-0.99999984 -1.710711,4.6549147 -4.0000128,1.0416221 z" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+                      ScrollViewer.VerticalScrollBarVisibility="Disabled" StrokeThickness="1.5">
+            <Path.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform ScaleX="0.7" ScaleY="-0.7"/>
+                    <SkewTransform AngleX="0" AngleY="0"/>
+                    <RotateTransform Angle="0"/>
+                    <TranslateTransform X="0" Y="2"/>
+                </TransformGroup>
+            </Path.RenderTransform>
+        </Path>
+        <Path x:Key="SortAscPath" Fill="#FFFFFFFF" Stretch="Fill" Stroke="#FFFFFFFF" Margin="1,1,1,1" Width="Auto" Height="Auto" RenderTransformOrigin="0.5,0.5" 
+                      Data="M-6,4.5833333 L-4,-0.99999984 -1.710711,4.6549147 -4.0000128,1.0416221 z" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+                      ScrollViewer.VerticalScrollBarVisibility="Disabled" StrokeThickness="1.5">
+            <Path.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform ScaleX="0.7" ScaleY="0.7"/>
+                    <SkewTransform AngleX="0" AngleY="0"/>
+                    <RotateTransform Angle="0"/>
+                    <TranslateTransform X="0" Y="-2"/>
+                </TransformGroup>
+            </Path.RenderTransform>
+        </Path>
+        <Readers:BytesReceivedConverter x:Key="BytesReceivedConverter"/>
+        <DataTemplate x:Key="DownloadItemTemplate">
+            <Grid ShowGridLines="false" Background="Transparent">
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="30"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Grid.Row="0" Text="{Binding Path=AuthorName}" FontSize="14" HorizontalAlignment="Left"/>
+                <TextBlock Grid.Column="0" Grid.Row="1" Text="{Binding Path=AuthorTextName}" FontSize="10" TextWrapping="Wrap" HorizontalAlignment="Left"/>
+                <StackPanel Orientation="Horizontal" Grid.Column="0" Grid.Row="2">
+                    <TextBlock Text="Завершено " FontSize="12" HorizontalAlignment="Left"/>
+                    <TextBlock Text="{Binding Path=BytesReceived, Converter={StaticResource BytesReceivedConverter}}" FontSize="12" TextWrapping="Wrap" HorizontalAlignment="Left"/>
+                    <TextBlock Text=" из " FontSize="12" HorizontalAlignment="Left"/>
+                    <TextBlock Text="{Binding Path=BytesFull}" FontSize="12" TextWrapping="Wrap" HorizontalAlignment="Left"/>
+                    <TextBlock Text=" кб." FontSize="12" HorizontalAlignment="Left"/>
+                </StackPanel>
+                <Button Grid.Column="1" Grid.Row="0" Grid.RowSpan="3" x:Name="CancelDownloadButton" ToolTip="Отменить закачку"
+                        Style="{DynamicResource CirculeButtonStyle}" HorizontalAlignment="Center" VerticalAlignment="Center" Cursor="Hand" 
+                        Content="X" FontFamily="Monotype Corsiva" FontSize="20" Height="28" Width="28" Padding="0,0,3,0"
+                        Click="CancelDownloadButton_Click">
+                </Button>
+            </Grid>
+        </DataTemplate>
+    </Window:DarkWindow.Resources>
+    
+    <Window:DarkWindow.CommandBindings>
+        <CommandBinding Command="Window:WindowCommands.Minimize" Executed="Minimize_Executed"/>
+        <CommandBinding Command="Window:WindowCommands.Close" Executed="Close_Executed"/>
+        <CommandBinding Command="{x:Static Window:MainCommands.DeleteAuthorOrCategoryCommand}" 
+                        Executed="DeleteAuthorOrCategoryCommand_Executed" CanExecute="AuthorOrCategoryListBoxIsNotNullAndCategoryIsEmpty" />
+        <CommandBinding Command="{x:Static Window:MainCommands.CopyAuthorCommand}" 
+                        Executed="CopyAuthorCommand_Executed" CanExecute="AuthorsListBoxIsNotNull" />
+        <CommandBinding Command="{x:Static Window:MainCommands.RenameAuthorOrCategoryCommand}" 
+                        Executed="RenameAuthorOrCategoryCommand_Executed" CanExecute="AuthorOrCategoryListBoxIsNotNull" />
+        <CommandBinding Command="{x:Static Window:MainCommands.OpenAuthorWindowCommand}" 
+                        Executed="OpenAuthorWindowCommand_Executed" CanExecute="AuthorsListBoxIsNotNull" />
+        <CommandBinding Command="{x:Static Window:MainCommands.OpenAuthorPageCommand}" 
+                        Executed="OpenAuthorPageCommand_Executed" CanExecute="AuthorsListBoxIsNotNull" />
+        <CommandBinding Command="{x:Static Window:MainCommands.IsIgnoredCommand}" 
+                        Executed="IsIgnoredCommand_Executed" CanExecute="AuthorsListBoxIsNotNull" />
+        <CommandBinding Command="{x:Static Window:MainCommands.IsReadAuthorCommand}" 
+                        Executed="IsReadAuthorCommand_Executed" CanExecute="AuthorsListBoxIsNotNull" />
+        <CommandBinding Command="{x:Static Window:MainCommands.UpdateAuthorCommand}" 
+                        Executed="UpdateAuthorCommand_Executed" CanExecute="AuthorsListBoxIsNotNull" />
+        <CommandBinding Command="{x:Static Window:MainCommands.ChangeCategoryAuthorCommand}" 
+                        Executed="ChangeCategoryAuthorCommand_Executed" CanExecute="AuthorsListBoxIsNotNull" />
+        <CommandBinding Command="{x:Static Window:MainCommands.AddAuthorCommand}" 
+                        Executed="AddAuthorCommand_Executed" />
+        <CommandBinding Command="{x:Static Window:MainCommands.ExtendedModeCommand}" 
+                        Executed="ExtendedModeCommand_Executed" />
+        <CommandBinding Command="{x:Static Window:MainCommands.UseCategoryCommand}" 
+                        Executed="UseCategoryCommand_Executed" />
+        <CommandBinding Command="{x:Static Window:MainCommands.FilterCommand}" 
+                        Executed="FilterCommand_Executed" />
+        <CommandBinding Command="{x:Static Window:MainCommands.PlayPauseListCommand}" 
+                        Executed="PlayPauseListCommand_Executed" />
+        <CommandBinding Command="{x:Static Window:MainCommands.CategoryCollapsedCommand}" 
+                        Executed="CategoryCollapsedCommand_Executed" CanExecute="CategoryListBoxIsNotNull" />
+        <CommandBinding Command="{x:Static Window:MainCommands.CategoryUpCommand}" 
+                        Executed="CategoryUpCommand_Executed" CanExecute="CategoryListBoxIsNotNull" />
+        <CommandBinding Command="{x:Static Window:MainCommands.CategoryDownCommand}" 
+                        Executed="CategoryDownCommand_Executed" CanExecute="CategoryListBoxIsNotNull" />
+    </Window:DarkWindow.CommandBindings>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50" /> <!-- Панель инструментов -->
+            <RowDefinition Height="*" /> <!-- ListBox с авторами -->
+            <RowDefinition Height="Auto"/> <!-- Новый автор -->
+            <RowDefinition Height="Auto" MaxHeight="200"/> <!-- Очередь закачки -->
+            <RowDefinition Height="Auto"/> <!-- Лог -->
+            <RowDefinition Height="25"/> <!-- Статусная строка -->
+        </Grid.RowDefinitions>
+        <!-- Панель инструментов -->
+        <Grid Grid.Row="0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" FlowDirection="LeftToRight">
+                <CheckBox x:Name="PlayPauseButton" ToolTip="Обновить данные" VerticalAlignment="Bottom" HorizontalAlignment="Left" Content="CheckBox" 
+                      Style="{DynamicResource PlayPauseButtonStyle}" Height="30" Width="30" Margin="5,5,5,5" Cursor="Hand" 
+                      Command="{x:Static Window:MainCommands.PlayPauseListCommand}" IsChecked="{Binding Path=Working}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" FlowDirection="RightToLeft" VerticalAlignment="Top">
+                <Button x:Name="SortDirectButton" Margin ="8,-11,0,4" Width="16" Height="16" VerticalAlignment="Top"
+                            Cursor="Hand" RenderTransformOrigin="-1.64,0.6" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
+                            Click="SortDirectButton_Click">
+                </Button>
+                <Button x:Name="SortPropertyButton" Margin ="2,-10,0,4" Width="16" Height="16" VerticalAlignment="Top" 
+                            Click="SortPropertyButton_Click" Padding="2,-1,1,1" FontFamily="Monotype Corsiva" FontSize="16" Cursor="Hand">
+                    a
+                </Button>
+                <ToggleButton x:Name="ExtendedModeButton" Margin ="3,-9,0,4" Width="16" Height="16" VerticalAlignment="Top"
+                                      Padding="2,-1,1,1" FontFamily="Monotype Corsiva" FontSize="16" Cursor="Hand" ToolTip="Расширенный режим" 
+                                      IsChecked="{Binding Path = ExtendedMode, Mode=OneWay}" Command="{x:Static Window:MainCommands.ExtendedModeCommand}" >
+                    e
+                </ToggleButton>
+                <ToggleButton x:Name="UseCategoryButton" Margin ="2,-7,0,4" Width="16" Height="16" VerticalAlignment="Top" 
+                                      Padding="2,-1,1,1" FontFamily="Monotype Corsiva" FontSize="16" Cursor="Hand" ToolTip="Использовать категории" 
+                                      IsChecked="{Binding Path = UseCategory, Mode=OneWay}" Command="{x:Static Window:MainCommands.UseCategoryCommand}" >
+                    c
+                </ToggleButton>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" FlowDirection="RightToLeft" VerticalAlignment="Bottom">
+                <TextBox x:Name="FilterTextBox" Margin="6,0,0,4" Width="80" MinHeight="18" VerticalAlignment="Bottom" Padding="0,0,0,0" FlowDirection="LeftToRight"
+                             TextChanged="FilterTextBox_TextChanged" TabIndex="1">
+                </TextBox>
+                <Label Content="Фильтр:" Margin ="0,0,0,2" Foreground="White" Opacity="0.8" VerticalAlignment="Bottom" FlowDirection="LeftToRight" HorizontalAlignment="Right">
+                </Label>
+            </StackPanel>
+
+        </Grid>
+        <Grid Grid.Row="1" Margin="6,0,6,0" x:Name="AuthorGrid">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <!-- ListBox с авторами -->
+            <ListBox x:Name="AuthorsListBox" Grid.Column="0" Grid.ColumnSpan="2" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="6,0,6,0" 
+                 KeyUp="AuthorsListBox_KeyUp" KeyDown="AuthorsListBox_KeyDown" MouseDoubleClick="AuthorsListBox_MouseDoubleClick"
+                 IsTabStop="True" TabIndex="2" ItemTemplateSelector="{StaticResource ListBoxDataTemplateSelector}" SelectionChanged="AuthorsListBox_SelectionChanged"
+                 ScrollViewer.ScrollChanged="AuthorsListBox_ScrollChanged" 
+                 AllowDrop="True" DragOver="AuthorsListBox_DragOver" Drop="AuthorsListBox_Drop"
+                      ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            </ListBox>
+            <Grid x:Name="AuthorPanelPlacement" Grid.Column="1" Grid.Row="1"></Grid>
+            <!--<Local:AuthorPanel Grid.Column="1" Grid.Row="1" x:Name="AuthorPanel"/>-->
+            <GridSplitter Grid.Column="0" ResizeDirection="Columns" Width="5" Margin="1" x:Name="Spliter" Visibility="Collapsed"/>
+        </Grid>
+        <!-- Новый автор -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="25"/>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="30"/>
+            </Grid.ColumnDefinitions>
+            <Label Grid.Column="0" x:Name="label1" Content="Url:" Height="23" HorizontalAlignment="Left" VerticalAlignment="Center" Width="28" Foreground="White">
+                <Label.BitmapEffect>
+                    <OuterGlowBitmapEffect GlowColor="#FFFFFFFF" GlowSize="3" Opacity="0.4"/>
+                </Label.BitmapEffect>
+            </Label>
+            <TextBox Grid.Column="1" x:Name="AddAuthorTextBox" Height="23" HorizontalAlignment="Stretch" VerticalAlignment="Center" Focusable="True"
+                     KeyDown="AddAuthorTextBox_KeyDown" TabIndex="3" />
+            <Button Grid.Column="2" x:Name="AddButton" Content="+" ToolTip="Добавить автора" Width="20" Height="20" Margin="0,7,0,7" 
+                    HorizontalAlignment="Center" VerticalAlignment="Center" Cursor="Hand" IsEnabled="True" Command="{x:Static Window:MainCommands.AddAuthorCommand}" />
+            <Grid.Resources>
+                <Style TargetType="{x:Type Grid}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Path=ExtendedMode}" Value="false">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Resources>
+        </Grid>
+        <!-- Очередь закачки -->
+        <ListBox x:Name="downloadHelper" Grid.Row="3" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="6,0,6,0" 
+                 IsTabStop="True" ItemTemplate="{StaticResource DownloadItemTemplate}" Visibility="Collapsed"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+        </ListBox>
+        <!-- Лог -->
+        <TextBox Grid.Row="4" x:Name="LogListBox" Visibility="Collapsed" MinHeight="50" MaxHeight="150" Text="{Binding Path=Log, Mode=OneWay}" 
+                 IsReadOnly="True"/>
+        <!-- Статусная строка -->
+        <Label Grid.Row="5" x:Name="StatusLabel" Margin="10,0,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" 
+               Foreground="{Binding Path=Foreground}" Content="{Binding Path=Message}" MouseDown="StatusLabel_MouseUp">
+        </Label>
+    </Grid>
+</Window:DarkWindow>

@@ -1,0 +1,66 @@
+﻿<Window:DarkWindow x:Class="SIinformer.Window.ImportWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Window="clr-namespace:SIinformer.Window"
+        Title="Импорт ссылок" Height="540" Width="830"
+    MaximizeButtonVisibility="Collapsed" MinimizeButtonVisibility="Collapsed" CloseButtonVisibility="Visible"
+    WindowStartupLocation="CenterScreen" TitleAlignment="Center" Style="{StaticResource WindowStyle}" Template="{StaticResource WindowContentTemplate}"
+    MouseLeftButtonDown="NonRectangularWindow_MouseLeftButtonDown" ResizeMode="CanResizeWithGrip" ShowInTaskbar="False">
+
+    <Window.CommandBindings>
+        <CommandBinding Command="Window:WindowCommands.Close" Executed="Close_Executed"/>
+    </Window.CommandBindings>
+    
+    <Grid Margin="0,30,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+        <Border Background="#FF595959" CornerRadius="3" Padding="5" Margin="5">
+            <TextBlock  HorizontalAlignment="Center" Foreground="LightGray" TextWrapping="Wrap" TextAlignment="Center" >
+                На этой форме вы можете выполнить импорт сылок из любого внешнего файла. Для этого выберите файл, укажите предполагаемую кодировку текста в файле и нажмите кнопку "Прочитать из файла".<LineBreak></LineBreak>
+                Если в файле будут найдены ссылки, они появятся в списке. Если они не появились, но вы уверены, что они там есть, укажите другую кодировку и повторите процедуру чтения.<LineBreak></LineBreak>
+                Если все в порядке и вы согласны, нажмите кнопку "Импортировать", программа попытается добавить авторов в список.
+            </TextBlock>
+        </Border>
+        <Border Grid.Row="1" Background="#FF333333" CornerRadius="3" Padding="5" Margin="5" >
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto"></ColumnDefinition>
+                    <ColumnDefinition></ColumnDefinition>
+                    <ColumnDefinition Width="auto"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+               
+                <TextBlock Foreground="LightGray" VerticalAlignment="Center">Файл:</TextBlock>
+                <Border Grid.Column="1" CornerRadius="5" Background="#FF595959" Padding="3" Margin="5,0,5,0">
+                    <TextBlock x:Name="lblFile" Foreground="LightGray" TextWrapping="Wrap"></TextBlock>
+                </Border>
+                <Button Grid.Column="2" Height="20" Margin="5,0,5,0" Click="ButtonSelectFile_Click">Выбрать файл</Button>
+
+                <TextBlock Grid.Row="1" Foreground="LightGray" VerticalAlignment="Center">Кодировка:</TextBlock>
+                <Border Grid.Row="1" Grid.Column="1"  CornerRadius="5" Background="#FF595959" Padding="3" Margin="5">
+                    <ComboBox x:Name="comboEncoding" DisplayMemberPath="Name" SelectedValuePath="Encoding" ></ComboBox>
+                </Border>
+                <Button Grid.Row="1" Grid.Column="2" Height="20" Margin="5,0,5,0" VerticalAlignment="Center" Click="ButtonRead_Click">Прочитать из файла</Button>
+                
+                <TextBlock Grid.Row="2" Foreground="LightGray" VerticalAlignment="Top" Margin="0,10">Адреса:</TextBlock>
+                <Border Grid.Row="2" Grid.Column="1"  CornerRadius="5" Background="#FF595959" Padding="3" Margin="5">
+                    <ListBox x:Name="listURLs" SelectionMode="Single"></ListBox>
+                </Border>
+                <Button Grid.Row="2" Grid.Column="2" Height="20" Margin="5,10,5,0" VerticalAlignment="Top" Click="ButtonDelete_Click">Удалить адрес</Button>
+                <TextBlock Grid.Row="3" Grid.ColumnSpan="3" Foreground="LightGray" x:Name="lblStatus" TextWrapping="Wrap"></TextBlock>
+            </Grid>
+        </Border>
+        <StackPanel HorizontalAlignment="Right" Grid.Row="2" Orientation="Horizontal" Margin="0,0,10,10"  >
+            <Button Margin ="2,5,5,5" Height="20" MinWidth="80" IsCancel="True" Click="ButtonCancel_Click">Отмена</Button>
+            <Button Margin ="2,5,5,5" Height="20" MinWidth="80" Click="ButtonOK_Click">Импортировать</Button>
+        </StackPanel>
+    </Grid>
+  </Window:DarkWindow>

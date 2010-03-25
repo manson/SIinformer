@@ -1,0 +1,320 @@
+﻿<ResourceDictionary 
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"
+    xmlns:Window="clr-namespace:SIinformer.Window">
+
+    <!--MainWindow-->
+    <ControlTemplate x:Key="WindowContentTemplate" TargetType="{x:Type Window:DarkWindow}" >
+        <Border HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="Bor"
+    		CornerRadius="20,20,10,10" ClipToBounds="True"
+    		Background="{TemplateBinding Background}"
+    		BorderBrush="{TemplateBinding BorderBrush}"
+    		BorderThickness="{TemplateBinding BorderThickness}">
+            <Grid x:Name="grid" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="50"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Label x:Name="TitleLabel" Grid.Row="0" HorizontalAlignment="{TemplateBinding TitleAlignment}" FontSize="16" VerticalAlignment="Top" Foreground="#FFFCFCFC" Content="{TemplateBinding Title}" Margin="8,3,0,0">
+                    <Label.BitmapEffect>
+                        <OuterGlowBitmapEffect GlowColor="#FFFFFFFF" GlowSize="3" Opacity="0.4"/>
+                    </Label.BitmapEffect>
+                </Label>
+                <StackPanel x:Name="stackPanel" Grid.Row="0" Width="Auto" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right" FlowDirection="RightToLeft"
+                            Margin="0,8,8,0" >
+                    <Button  x:Name="CloseButton" Command="Window:WindowCommands.Close" Width="20" Height="20" Cursor="Hand" IsEnabled="True" VerticalAlignment="Top" ToolTip="Закрыть" Visibility="{TemplateBinding CloseButtonVisibility}">
+                        <Grid Width="Auto" Height="Auto" RenderTransformOrigin="0.5,0.5" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Grid.RenderTransform>
+                                <TransformGroup>
+                                    <ScaleTransform ScaleX="0.5" ScaleY="0.5"/>
+                                    <SkewTransform AngleX="0" AngleY="0"/>
+                                    <RotateTransform Angle="0"/>
+                                    <TranslateTransform X="0" Y="0"/>
+                                </TransformGroup>
+                            </Grid.RenderTransform>
+                            <Path Stretch="Fill" Width="Auto" Height="Auto" Data="M5,5 L10,10" StrokeThickness="2" RenderTransformOrigin="0.5,0.5" d:LayoutOverrides="Width, Height" Stroke="#FFC3C3C3">
+                                <Path.RenderTransform>
+                                    <TransformGroup>
+                                        <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                        <SkewTransform AngleX="0" AngleY="0"/>
+                                        <RotateTransform Angle="0"/>
+                                        <TranslateTransform X="0" Y="0"/>
+                                    </TransformGroup>
+                                </Path.RenderTransform>
+                            </Path>
+                            <Path Stretch="Fill" Width="Auto" Height="Auto" Data="M5,5 L10,10" StrokeThickness="2" RenderTransformOrigin="0.5,0.5" Stroke="#FFC7C7C7">
+                                <Path.RenderTransform>
+                                    <TransformGroup>
+                                        <ScaleTransform ScaleX="-1" ScaleY="1"/>
+                                        <SkewTransform AngleX="0" AngleY="0"/>
+                                        <RotateTransform Angle="0"/>
+                                        <TranslateTransform X="0" Y="0"/>
+                                    </TransformGroup>
+                                </Path.RenderTransform>
+                            </Path>
+                        </Grid>
+                    </Button>
+                    <Button  x:Name="MaximiseButton" Command="Window:WindowCommands.Maximize" Width="20" Height="20" Cursor="Hand" IsEnabled="True" ToolTip="Во весь экран" Visibility="{TemplateBinding MaximizeButtonVisibility}">
+                        <Path Stretch="Fill" Width="Auto" Height="1" Data="M5,15 L15,15" RenderTransformOrigin="0.5,0.5" StrokeThickness="1" Stroke="#FFFFFFFF">
+                            <Path.RenderTransform>
+                                <TransformGroup>
+                                    <ScaleTransform ScaleX="0.5" ScaleY="1"/>
+                                    <SkewTransform AngleX="0" AngleY="0"/>
+                                    <RotateTransform Angle="0"/>
+                                    <TranslateTransform X="0" Y="-4"/>
+                                </TransformGroup>
+                            </Path.RenderTransform>
+                        </Path>
+                    </Button>
+                    <Button x:Name="MinimiseButton" Command="Window:WindowCommands.Minimize" Width="20" Height="20" Cursor="Hand" IsEnabled="True" ToolTip="Скрыть" Visibility="{TemplateBinding MinimizeButtonVisibility}">
+                        <Path Stretch="Fill" Width="Auto" Height="1" Data="M5,15L15,15" RenderTransformOrigin="0.5,0.5" StrokeThickness="1" Stroke="#FFFFFFFF">
+                            <Path.RenderTransform>
+                                <TransformGroup>
+                                    <ScaleTransform ScaleX="0.5" ScaleY="1"/>
+                                    <SkewTransform AngleX="0" AngleY="0"/>
+                                    <RotateTransform Angle="0"/>
+                                    <TranslateTransform X="0" Y="4"/>
+                                </TransformGroup>
+                            </Path.RenderTransform>
+                        </Path>
+                    </Button>
+                </StackPanel>
+                <Path Margin="-115.294,19,-109,0" Stretch="Fill" Stroke="#FF454545" Data="M1.0941461,143 C8.3683634,211.51003 90.393021,265.5 190.5,265.5 290.60699,265.5 372.63162,211.51003 379.90585,143 380.31998,146.29675 380.5,149.63371 380.5,153 380.5,226.17773 294.22811,416.25016 189.294,416.25016 84.359895,416.25016 0.5,226.17773 0.5,153 0.5,149.63371 0.68001127,146.29675 1.0941461,143 z" StrokeThickness="2" Height="54" Grid.RowSpan="2" VerticalAlignment="Top">
+                    <Path.Fill>
+                        <RadialGradientBrush>
+                            <RadialGradientBrush.RelativeTransform>
+                                <TransformGroup>
+                                    <RotateTransform Angle="0" CenterX="0.5" CenterY="0.5"/>
+                                </TransformGroup>
+                            </RadialGradientBrush.RelativeTransform>
+                            <GradientStop Color="#7EFFFFFF" Offset="0"/>
+                            <GradientStop Color="#00494949" Offset="1"/>
+                        </RadialGradientBrush>
+                    </Path.Fill>
+                </Path>
+                <ContentPresenter Grid.Row="1" x:Name="WindowContent" Content="{TemplateBinding Content}"/>
+                <ResizeGrip Grid.Row="1"  HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+            </Grid>
+        </Border>
+    </ControlTemplate>
+
+    <Style x:Key="WindowStyle" TargetType="{x:Type Window:DarkWindow}">
+        <Setter Property="Icon" Value="/SIinformer;component/books.ico"/>
+        <Setter Property="Visibility" Value="Visible"/>
+        <Setter Property="WindowStyle" Value="None"/>
+        <Setter Property="ResizeMode" Value="CanResizeWithGrip"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{StaticResource WindowBackgroundBrush}"/>
+        <Setter Property="Background">
+            <Setter.Value>
+                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                    <GradientStop Color="#FF000000" Offset="0"/>
+                    <GradientStop Color="#FF1A1A1A" Offset="1"/>
+                    <GradientStop Color="#FF434343" Offset="0.996"/>
+                    <GradientStop Color="#FF535353" Offset="0.019"/>
+                    <GradientStop Color="#FF000000" Offset="0.076"/>
+                    <GradientStop Color="#FF000000" Offset="0.954"/>
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
+        <!--<Setter Property="Width" Value="300"/>
+        <Setter Property="Height" Value="200"/>-->
+        <Setter Property="AllowsTransparency" Value="True"/>
+        <Setter Property="Window:DarkWindow.TitleAlignment" Value="Left"/>
+        <Setter Property="Title" Value="Window title"/>
+    </Style>
+
+    <!--PlayPauseButton-->
+    <SolidColorBrush x:Key="CheckBoxFillNormal" Color="#F4F4F4"/>
+    <SolidColorBrush x:Key="CheckBoxStroke" Color="#8E8F8F"/>
+    <Style x:Key="EmptyCheckBoxFocusVisual">
+        <Setter Property="Control.Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Rectangle SnapsToDevicePixels="true" Margin="1" Stroke="Black" StrokeDashArray="1 2" StrokeThickness="1"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="CheckRadioFocusVisual">
+        <Setter Property="Control.Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Rectangle SnapsToDevicePixels="true" Margin="14,0,0,0" Stroke="Black" StrokeDashArray="1 2" StrokeThickness="1"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="PlayPauseButtonStyle" TargetType="{x:Type CheckBox}">
+        <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+        <Setter Property="Background" Value="{StaticResource CheckBoxFillNormal}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource CheckBoxStroke}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="FocusVisualStyle" Value="{StaticResource EmptyCheckBoxFocusVisual}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate x:Name="PlayPauseButtotn" TargetType="{x:Type CheckBox}">
+                    <ControlTemplate.Resources>
+                        <Storyboard x:Key="ShowPauseBt">
+                            <DoubleAnimationUsingKeyFrames BeginTime="00:00:00" Storyboard.TargetName="grid1" Storyboard.TargetProperty="(UIElement.Opacity)">
+                                <SplineDoubleKeyFrame KeyTime="00:00:00.2000000" Value="1"/>
+                            </DoubleAnimationUsingKeyFrames>
+                            <DoubleAnimationUsingKeyFrames BeginTime="00:00:00" Storyboard.TargetName="path" Storyboard.TargetProperty="(UIElement.Opacity)">
+                                <SplineDoubleKeyFrame KeyTime="00:00:00.2000000" Value="0"/>
+                            </DoubleAnimationUsingKeyFrames>
+                        </Storyboard>
+                        <Storyboard x:Key="ShowPlayBt">
+                            <DoubleAnimationUsingKeyFrames BeginTime="00:00:00" Storyboard.TargetName="path" Storyboard.TargetProperty="(UIElement.Opacity)">
+                                <SplineDoubleKeyFrame KeyTime="00:00:00.2000000" Value="1"/>
+                            </DoubleAnimationUsingKeyFrames>
+                            <DoubleAnimationUsingKeyFrames BeginTime="00:00:00" Storyboard.TargetName="grid1" Storyboard.TargetProperty="(UIElement.Opacity)">
+                                <SplineDoubleKeyFrame KeyTime="00:00:00.2000000" Value="0"/>
+                            </DoubleAnimationUsingKeyFrames>
+                        </Storyboard>
+                    </ControlTemplate.Resources>
+                    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" x:Name="grid" Background="#01000000">
+                        <Grid.BitmapEffect>
+                            <OuterGlowBitmapEffect GlowColor="#FFFFFFFF" GlowSize="4"/>
+                        </Grid.BitmapEffect>
+                        <Ellipse Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="#00FFFFFF" Opacity="0.505" StrokeThickness="0.5">
+                            <Ellipse.Stroke>
+                                <LinearGradientBrush EndPoint="1.299,1.26" StartPoint="0.185,0.111">
+                                    <GradientStop Color="#FF000000" Offset="0.729"/>
+                                    <GradientStop Color="#FFA9A9A9" Offset="1"/>
+                                    <GradientStop Color="#FF000000" Offset="0"/>
+                                    <GradientStop Color="#FFBBBBBB" Offset="0.248"/>
+                                </LinearGradientBrush>
+                            </Ellipse.Stroke>
+                        </Ellipse>
+                        <Path Fill="#FFFFFFFF" Stretch="Fill" Stroke="{x:Null}" Data="M0,0 L7.3550714,3.7050492 -3.9870906E-15,7.133155 z" x:Name="path" RenderTransformOrigin="0.5,0.5" Margin="4,0,0,0">
+                            <Path.RenderTransform>
+                                <TransformGroup>
+                                    <ScaleTransform ScaleX="0.5" ScaleY="0.5"/>
+                                    <SkewTransform AngleX="0" AngleY="0"/>
+                                    <RotateTransform Angle="0"/>
+                                    <TranslateTransform X="0" Y="0"/>
+                                </TransformGroup>
+                            </Path.RenderTransform>
+                        </Path>
+                        <Grid Margin="3,1.5,4,1.5" Opacity="0" x:Name="grid1" d:IsHidden="True" RenderTransformOrigin="0.5,0.5">
+                            <Grid.RenderTransform>
+                                <TransformGroup>
+                                    <ScaleTransform ScaleX="0.5" ScaleY="1"/>
+                                    <SkewTransform AngleX="0" AngleY="0"/>
+                                    <RotateTransform Angle="0"/>
+                                    <TranslateTransform X="0" Y="0"/>
+                                </TransformGroup>
+                            </Grid.RenderTransform>
+                            <Path d:LayoutOverrides="Width" HorizontalAlignment="Right" Margin="0,0,0,0" Width="4" Height="17" Fill="#FFFFFFFF" Stretch="Fill" Stroke="{x:Null}" Data="M0,0 L4,0 L4,17 L0,17 z" RenderTransformOrigin="0.5,0.5">
+                                <Path.RenderTransform>
+                                    <TransformGroup>
+                                        <ScaleTransform ScaleX="2" ScaleY="1"/>
+                                        <SkewTransform AngleX="0" AngleY="0"/>
+                                        <RotateTransform Angle="0"/>
+                                        <TranslateTransform X="0" Y="0"/>
+                                    </TransformGroup>
+                                </Path.RenderTransform>
+                            </Path>
+                            <Path d:LayoutOverrides="Width" HorizontalAlignment="Left" Margin="0,0,0,0" Width="4" Height="17" Fill="#FFFFFFFF" Stretch="Fill" Stroke="{x:Null}" Data="M0,0 L4,0 L4,17 L0,17 z" RenderTransformOrigin="0.5,0.5">
+                                <Path.RenderTransform>
+                                    <TransformGroup>
+                                        <ScaleTransform ScaleX="2" ScaleY="1"/>
+                                        <SkewTransform AngleX="0" AngleY="0"/>
+                                        <RotateTransform Angle="0"/>
+                                        <TranslateTransform X="0" Y="0"/>
+                                    </TransformGroup>
+                                </Path.RenderTransform>
+                            </Path>
+                        </Grid>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Trigger.ExitActions>
+                                <BeginStoryboard Storyboard="{StaticResource ShowPlayBt}" x:Name="ShowPauseBt_BeginStoryboard"/>
+                            </Trigger.ExitActions>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard Storyboard="{StaticResource ShowPauseBt}" x:Name="ShowPlayBt_BeginStoryboard"/>
+                            </Trigger.EnterActions>
+                        </Trigger>
+                        <Trigger Property="HasContent" Value="true">
+                            <Setter Property="FocusVisualStyle" Value="{StaticResource CheckRadioFocusVisual}"/>
+                            <Setter Property="Padding" Value="4,0,0,0"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="false">
+                            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+                            <Setter Property="Width" TargetName="grid" Value="20"/>
+                            <Setter Property="Height" TargetName="grid" Value="20"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--Circule button-->
+    <ControlTemplate x:Key="CirculeButton" TargetType="{x:Type Button}">
+        <Grid>
+            <!-- убрал анимацию, глючит при установке IsEnabled для кнопки, остается круг -->
+            <!--<vsm:VisualStateManager.VisualStateGroups>
+                <vsm:VisualStateGroup x:Name="VisualStateGroup">
+                    <vsm:VisualStateGroup.Transitions>
+                        <vsm:VisualTransition From="Normal" GeneratedDuration="00:00:00.3000000" To="MouseOver" />
+                        <vsm:VisualTransition From="MouseOver" GeneratedDuration="00:00:00.5000000" To="Normal" />
+                        <vsm:VisualTransition GeneratedDuration="00:00:00.3000000"/>
+                    </vsm:VisualStateGroup.Transitions>
+                    <vsm:VisualState x:Name="Normal" />
+                    <vsm:VisualState x:Name="MouseOver">
+                        <Storyboard>
+                            <ColorAnimationUsingKeyFrames BeginTime="00:00:00" Duration="00:00:00.0010000" Storyboard.TargetName="ellipse" 
+                                                          Storyboard.TargetProperty="(Shape.Fill).(SolidColorBrush.Color)">
+                                <SplineColorKeyFrame KeyTime="00:00:00" Value="#FF929191"/>
+                            </ColorAnimationUsingKeyFrames>
+                            <DoubleAnimationUsingKeyFrames BeginTime="00:00:00" Duration="00:00:00.0010000" Storyboard.TargetName="ellipse" 
+                                                           Storyboard.TargetProperty="(UIElement.Opacity)">
+                                <SplineDoubleKeyFrame KeyTime="00:00:00" Value="1"/>
+                            </DoubleAnimationUsingKeyFrames>
+                        </Storyboard>
+                    </vsm:VisualState>
+                </vsm:VisualStateGroup>
+            </vsm:VisualStateManager.VisualStateGroups>-->
+            <Ellipse  x:Name="ellipse" StrokeThickness="2" Stroke="{x:Null}" Fill="Gold" Opacity="0.0001"/>
+            <ContentPresenter x:Name="contentPresenter" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" 
+                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" 
+                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" RenderTransformOrigin="0.5,0.5" 
+                              Margin="{TemplateBinding Padding}" >
+                <ContentPresenter.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform ScaleX="1" ScaleY="1"/>
+                        <SkewTransform AngleX="0" AngleY="0"/>
+                        <RotateTransform Angle="0"/>
+                        <TranslateTransform X="0" Y="0"/>
+                    </TransformGroup>
+                </ContentPresenter.RenderTransform>
+            </ContentPresenter>
+        </Grid>
+        <ControlTemplate.Triggers>
+            <Trigger Property="IsEnabled" Value="False" >
+                <Setter TargetName="ellipse" Property="Opacity" Value="0.0001" />
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True" >
+                <Setter TargetName="ellipse" Property="Opacity" Value="0.3" />
+            </Trigger>
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
+
+    <Style x:Key="CirculeButtonStyle" TargetType="{x:Type Button}">
+        <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ActiveCaptionBrushKey}}" />
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="{StaticResource NormalBorderBrush}" />
+        <Setter Property="FontFamily" Value="Monotype Corsiva"/>
+        <Setter Property="Template" Value="{DynamicResource CirculeButton}"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+
+</ResourceDictionary>

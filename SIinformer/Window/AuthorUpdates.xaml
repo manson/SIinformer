@@ -1,0 +1,29 @@
+﻿<Window:DarkWindow x:Class="SIinformer.Window.AuthorUpdates"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:si="clr-namespace:SIinformer"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:Window="clr-namespace:SIinformer.Window" mc:Ignorable="d"
+               Title="Обновления автора" TitleAlignment="Center" Style="{StaticResource WindowStyle}" Template="{StaticResource WindowContentTemplate}" 
+               WindowStartupLocation="Manual" MouseLeftButtonDown="NonRectangularWindow_MouseLeftButtonDown" Closed="Window_Closed" 
+               Loaded="Window_Loaded" KeyUp="Window_KeyUp">
+
+    <Window.CommandBindings>
+        <CommandBinding Command="Window:WindowCommands.Minimize" Executed="Minimize_Executed"/>
+        <CommandBinding Command="Window:WindowCommands.Maximize" Executed="Maximize_Executed"/>
+        <CommandBinding Command="Window:WindowCommands.Close" Executed="Close_Executed"/>
+    </Window.CommandBindings>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Label x:Name="AuthorUpdateDate" FontSize="12" Grid.Row="0" Margin="10,0,0,0" Foreground="#FFFFFFFF" VerticalAlignment="Bottom" Content="Обновления на дату:">
+            <Label.BitmapEffect>
+                <OuterGlowBitmapEffect GlowColor="#FFFFFFFF" GlowSize="3" Opacity="0.4"/>
+            </Label.BitmapEffect>
+        </Label>
+        <!-- список произведений -->
+        <si:AuthorPanel x:Name="authorPanel" Grid.Row="1" Padding="10"/>
+    </Grid>
+</Window:DarkWindow>

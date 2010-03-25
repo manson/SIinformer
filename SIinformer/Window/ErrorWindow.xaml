@@ -1,0 +1,17 @@
+﻿<Window x:Class="SIinformer.Window.ErrorWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Неустранимая ошибка в программе" Height="400" Width="400" WindowStartupLocation="CenterOwner">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="30"/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0" TextWrapping="Wrap" TextAlignment="Center" Margin="5">Обнаружена неустранимая ошибка в программе. К сожалению несохраненные данные будут потеряны.</TextBlock>
+        <TextBlock Grid.Row="1" TextWrapping="Wrap" TextAlignment="Left" Margin="5">Информация об ошибке (сохранено в error.log в папке программы):</TextBlock>
+        <TextBox x:Name="infoTextBox" Grid.Row="2" IsReadOnly="True"></TextBox>
+        <Button Grid.Row="3" Click="Button_Click">Закрыть</Button>
+    </Grid>
+</Window>

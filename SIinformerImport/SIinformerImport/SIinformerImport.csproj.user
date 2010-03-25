@@ -1,0 +1,12 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <StartArguments>-tst "SI_tst_2A.lst"</StartArguments>
+    <StartWorkingDirectory>D:\MANSON\myProjects\NET_3\SIinformer_3\Import\SIinformerImport\SIinformerImport\bin\Debug\</StartWorkingDirectory>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ProjectView>ShowAllFiles</ProjectView>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <StartArguments>-sql author.sdf</StartArguments>
+  </PropertyGroup>
+</Project>
