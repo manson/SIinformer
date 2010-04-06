@@ -218,6 +218,7 @@ namespace SIinformer.Utils
 
         #region Категории
 
+        
 
         /// <summary>
         /// Сохранить категории
@@ -236,62 +237,67 @@ namespace SIinformer.Utils
 
             if (!string.IsNullOrEmpty(categories_xml))
             {
-                // проверим, есть ли такой автор в БД
-                using (SQLiteCommand cmd = new SQLiteCommand("", conn))
+                lock (_locker)
                 {
-                    try
-                    {
-                        if (ds != null) ds.Dispose();
-                        ds = new DataSet();
-                        da = new SQLiteDataAdapter();
-                        string sql = string.Format("select * from categories");
-                        cmd.CommandText = sql;
-                        da.SelectCommand = cmd;
-                        var cb = new System.Data.SQLite.SQLiteCommandBuilder(da);
-                        da.Fill(ds, "categories");
 
-                        // исправляем свой косяк, надо было изначально ID сделать, иначе SQLite без праймари ки ругается на датасет
-                        // это чтобы не перегенерировать БД
-                        if (!ds.Tables["categories"].Columns.Contains("id"))
+
+                    using (SQLiteCommand cmd = new SQLiteCommand("", conn))
+                    {
+                        try
                         {
-                            // убьем таблицу категорий
-                            cmd.CommandText = "DROP TABLE categories";
-                            cmd.ExecuteNonQuery();
-                            // создаем таблицу категорий. Данных там мало и чтобы не мудохаться все храним в одной записи-строке
-                            sql = "create table categories(" +
-                                  "id varchar PRIMARY KEY ,categories_xml text, stamp bigint)";
-                            cmd.CommandText = sql;
-                            cmd.ExecuteNonQuery();
-                            // формируем датасет и дальше уже пишем данные
+                            if (ds != null) ds.Dispose();
                             ds = new DataSet();
                             da = new SQLiteDataAdapter();
-                            sql = string.Format("select * from categories");
+                            string sql = string.Format("select * from categories");
                             cmd.CommandText = sql;
                             da.SelectCommand = cmd;
-                            cb = new System.Data.SQLite.SQLiteCommandBuilder(da);
+                            var cb = new System.Data.SQLite.SQLiteCommandBuilder(da);
                             da.Fill(ds, "categories");
-                            MainWindow.MainForm.GetLogger().Add("Перегенерировали таблицу категорий (исправление некорректности).");
-                        }
 
-                        if (ds.Tables["categories"].Rows.Count == 0)
-                        {
-                            DataRow dr = ds.Tables["categories"].NewRow();
-                            dr["id"] = 1;
-                            dr["categories_xml"] = categories_xml;
-                            dr["stamp"] = timeStamp;
-                            ds.Tables["categories"].Rows.Add(dr);
-                        }
-                        else
-                        {
-                            ds.Tables["categories"].Rows[0]["categories_xml"] = categories_xml;
-                            ds.Tables["categories"].Rows[0]["stamp"] = timeStamp;    
-                        }
-                        da.Update(ds.Tables["categories"]);
+                            // исправляем свой косяк, надо было изначально ID сделать, иначе SQLite без праймари ки ругается на датасет
+                            // это чтобы не перегенерировать БД
+                            if (!ds.Tables["categories"].Columns.Contains("id"))
+                            {
+                                // убьем таблицу категорий
+                                cmd.CommandText = "DROP TABLE categories";
+                                cmd.ExecuteNonQuery();
+                                // создаем таблицу категорий. Данных там мало и чтобы не мудохаться все храним в одной записи-строке
+                                sql = "create table categories(" +
+                                      "id varchar PRIMARY KEY ,categories_xml text, stamp bigint)";
+                                cmd.CommandText = sql;
+                                cmd.ExecuteNonQuery();
+                                // формируем датасет и дальше уже пишем данные
+                                ds = new DataSet();
+                                da = new SQLiteDataAdapter();
+                                sql = string.Format("select * from categories");
+                                cmd.CommandText = sql;
+                                da.SelectCommand = cmd;
+                                cb = new System.Data.SQLite.SQLiteCommandBuilder(da);
+                                da.Fill(ds, "categories");
+                                MainWindow.MainForm.GetLogger().Add(
+                                    "Перегенерировали таблицу категорий (исправление некорректности).");
+                            }
 
-                    }
-                    catch (Exception ex)
-                    {
-                        MainWindow.MainForm.GetLogger().Add("Ошибка записи категорий в БД: " + ex.Message);
+                            if (ds.Tables["categories"].Rows.Count == 0)
+                            {
+                                DataRow dr = ds.Tables["categories"].NewRow();
+                                dr["id"] = 1;
+                                dr["categories_xml"] = categories_xml;
+                                dr["stamp"] = timeStamp;
+                                ds.Tables["categories"].Rows.Add(dr);
+                            }
+                            else
+                            {
+                                ds.Tables["categories"].Rows[0]["categories_xml"] = categories_xml;
+                                ds.Tables["categories"].Rows[0]["stamp"] = timeStamp;
+                            }
+                            da.Update(ds.Tables["categories"]);
+
+                        }
+                        catch (Exception ex)
+                        {
+                            MainWindow.MainForm.GetLogger().Add("Ошибка записи категорий в БД: " + ex.Message);
+                        }
                     }
                 }
             }
@@ -322,6 +328,9 @@ namespace SIinformer.Utils
                         {
                             var reader = new StringReader(categories_xml);
                             var sr = new XmlSerializer(typeof(CategoryList));
+                            foreach (Category category in list)
+                                category.SetOwner(list);
+                            list.Reorder();
                             return (CategoryList)sr.Deserialize(reader);
                         }
                         catch
@@ -335,6 +344,10 @@ namespace SIinformer.Utils
                 list = new CategoryList();
                 list.Add(new Category() { Name = "Default" });
             }
+            foreach (Category category in list)            
+                category.SetOwner(list);            
+            list.Reorder();
+
             return list;
         }
 

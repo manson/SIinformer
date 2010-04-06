@@ -338,9 +338,9 @@ namespace SIinformer.Logic
                     {
                         foreach (Author author in Authors)
                             author.Changed = false;
-                        Authors.Save(AuthorsFileName);
-                        Categories.Save(CategoriesFileName);
+                        Authors.Save(AuthorsFileName);                        
                     }
+                    Categories.Save(CategoriesFileName);
                 }
             }
         }

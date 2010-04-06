@@ -118,6 +118,25 @@ namespace SISyncronizer
                 Status = "Google - имя и пароль не должны быть пустыми.";
                 return;
             }
+            // настроим прокси
+            NocsService.UseProxy = SIinformer.Window.MainWindow.GetSettings().ProxySetting.UseProxy;
+            if(NocsService.UseProxy)
+            {
+                NocsService.AutomaticProxyDetection = false;
+                NocsService.ProxyHost = SIinformer.Window.MainWindow.GetSettings().ProxySetting.Address;
+                NocsService.ProxyPort = SIinformer.Window.MainWindow.GetSettings().ProxySetting.Port.ToString();
+                NocsService.ProxyUsername = SIinformer.Window.MainWindow.GetSettings().ProxySetting.UseAuthentification
+                                                ?
+                                                    SIinformer.Window.MainWindow.GetSettings().ProxySetting.UserName
+                                                : "";
+                NocsService.ProxyPassword = SIinformer.Window.MainWindow.GetSettings().ProxySetting.UseAuthentification
+                                                ?
+                                                    SIinformer.Window.MainWindow.GetSettings().ProxySetting.Password
+                                                : "";
+            }
+            else            
+                NocsService.AutomaticProxyDetection = true;
+            
             AuthorDocumentLink = new Dictionary<string, Document>();
             // let's instantiate our Synchronizer
             _synchronizer = new Synchronizer();

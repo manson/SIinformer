@@ -167,6 +167,7 @@ namespace SIinformer.Logic
 
         public void PositionUp()
         {
+            if (Owner==null) return;
             var temp = Owner[Index];
             Owner[Index] = Owner[Index - 1];
             Owner[Index - 1] = temp;
@@ -175,6 +176,7 @@ namespace SIinformer.Logic
 
         public void PositionDown()
         {
+            if (Owner == null) return;
             var temp = Owner[Index];
             Owner[Index] = Owner[Index + 1];
             Owner[Index + 1] = temp;

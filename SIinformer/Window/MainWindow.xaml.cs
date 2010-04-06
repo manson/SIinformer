@@ -724,7 +724,10 @@ namespace SIinformer.Window
             Author author = (Author) AuthorsListBox.SelectedValue;
             RenameWindow rw = new RenameWindow();
             if (rw.ShowDialog() == true)
+            {
+                if (rw.ResultNewName.Trim() == "") return;                
                 author.Category = rw.ResultNewName;
+            }
             AuthorsListBox.ScrollIntoView(author);
             InfoUpdater.Save();
         }

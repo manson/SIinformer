@@ -1134,7 +1134,8 @@ namespace Nocs
 
             var proxyHost = ProxyHost;
             var proxyPort = ProxyPort;
-            var proxy = new WebProxy(string.Format("http://{0}:{1}/", proxyHost, proxyPort), true);
+            var mask = proxyHost.StartsWith("http://") ? "{0}:{1}/" : "http://{0}:{1}/";
+            var proxy = new WebProxy(string.Format(mask, proxyHost, proxyPort), true);
 
             // let's check for credentials
             if (!string.IsNullOrEmpty(ProxyUsername) &&
