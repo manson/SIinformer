@@ -1,4 +1,4 @@
-﻿<Window:DarkWindow
+﻿<Window:DarkWindow xmlns:my="clr-namespace:SIinformer.Controls" 
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
@@ -117,6 +117,7 @@
             <RowDefinition Height="Auto"/> <!-- Новый автор -->
             <RowDefinition Height="Auto" MaxHeight="200"/> <!-- Очередь закачки -->
             <RowDefinition Height="Auto"/> <!-- Лог -->
+            <RowDefinition Height="Auto"/><!-- Тулбар -->
             <RowDefinition Height="25"/> <!-- Статусная строка -->
         </Grid.RowDefinitions>
         <!-- Панель инструментов -->
@@ -206,9 +207,18 @@
         <!-- Лог -->
         <TextBox Grid.Row="4" x:Name="LogListBox" Visibility="Collapsed" MinHeight="50" MaxHeight="150" Text="{Binding Path=Log, Mode=OneWay}" 
                  IsReadOnly="True"/>
+        <!--Тулбар-->
+        <my:ToolBar x:Name="si_toolbar" Grid.Row="5" Visibility="Collapsed"/>
         <!-- Статусная строка -->
-        <Label Grid.Row="5" x:Name="StatusLabel" Margin="10,0,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" 
-               Foreground="{Binding Path=Foreground}" Content="{Binding Path=Message}" MouseDown="StatusLabel_MouseUp">
-        </Label>
+        <Grid Grid.Row="6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"></ColumnDefinition>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+                <Button Click="MenuButton_Click" Margin="5,2,0,2" FontSize="10" ToolTip="Быстрое меню к некоторым функциям">Меню</Button>
+                <Label Grid.Column="1" x:Name="StatusLabel" Margin="5,0,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" 
+                       Foreground="{Binding Path=Foreground}" Content="{Binding Path=Message}" MouseDown="StatusLabel_MouseUp">
+                </Label>
+        </Grid>
     </Grid>
 </Window:DarkWindow>

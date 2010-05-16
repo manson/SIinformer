@@ -189,34 +189,39 @@ namespace SIinformer
                                               });
             worker.DoWork += ((o, e) =>
                                   {
-                                      // обновляем инфу о кешировании текстов
-                                      foreach (AuthorText authorText in ((Author)e.Argument).Texts)
+                                      try
                                       {
-                                          authorText.UpdateIsCached((Author)e.Argument);
+                                          // обновляем инфу о кешировании текстов
+                                          foreach (AuthorText authorText in ((Author)e.Argument).Texts)
+                                          {
+                                              authorText.UpdateIsCached((Author)e.Argument);
+                                          }
+                                          // отсортируем
+                                          switch (MainWindow.GetSettings().SortProperty)
+                                          {
+                                              case "UpdateDate":
+                                                  view.SortDescriptions.Add(new SortDescription("IsNew",
+                                                                                                ListSortDirection.Descending));
+                                                  view.SortDescriptions.Add(new SortDescription("UpdateDate",
+                                                                                                MainWindow.GetSettings().SortDirection));
+                                                  view.SortDescriptions.Add(new SortDescription("SectionName",
+                                                                                                ListSortDirection.Ascending));
+                                                  view.SortDescriptions.Add(new SortDescription("Name",
+                                                                                                ListSortDirection.Ascending));
+                                                  break;
+                                              case "Name":
+                                                  view.SortDescriptions.Add(new SortDescription("SectionName",
+                                                                                                MainWindow.GetSettings().SortDirection));
+                                                  view.SortDescriptions.Add(new SortDescription("Name",
+                                                                                                MainWindow.GetSettings().SortDirection));
+                                                  break;
+                                          }
+                                          // сгруппируем тексты по секции
+                                          view.GroupDescriptions.Add(new PropertyGroupDescription { PropertyName = "SectionName" });
+
                                       }
-                                      // отсортируем
-                                      switch (MainWindow.GetSettings().SortProperty)
-                                      {
-                                          case "UpdateDate":
-                                              view.SortDescriptions.Add(new SortDescription("IsNew",
-                                                                                            ListSortDirection.Descending));
-                                              view.SortDescriptions.Add(new SortDescription("UpdateDate",
-                                                                                            MainWindow.GetSettings().SortDirection));
-                                              view.SortDescriptions.Add(new SortDescription("SectionName",
-                                                                                            ListSortDirection.Ascending));
-                                              view.SortDescriptions.Add(new SortDescription("Name",
-                                                                                            ListSortDirection.Ascending));
-                                              break;
-                                          case "Name":
-                                              view.SortDescriptions.Add(new SortDescription("SectionName",
-                                                                                            MainWindow.GetSettings().SortDirection));
-                                              view.SortDescriptions.Add(new SortDescription("Name",
-                                                                                            MainWindow.GetSettings().SortDirection));
-                                              break;
-                                      }
-                                      // сгруппируем тексты по секции
-                                      view.GroupDescriptions.Add(new PropertyGroupDescription
-                                                                     {PropertyName = "SectionName"});
+                                      catch 
+                                      {} 
                                       e.Result = e.Argument;
                                   });
             worker.RunWorkerAsync(Author);

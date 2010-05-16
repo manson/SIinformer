@@ -74,14 +74,14 @@ namespace SISyncronizer
         {
             if (BgWorkerGetAllItems != null)
             {
-                while (BgWorkerGetAllItems.IsBusy) System.Threading.Thread.Sleep(1) ;
+                //while (BgWorkerGetAllItems.IsBusy) System.Threading.Thread.Sleep(1) ;
                 //BgWorkerGetAllItems.CancelAsync();
                 //while (BgWorkerGetAllItems.IsBusy) System.Threading.Thread.Sleep(1);
                 BgWorkerGetAllItems = null;
             }
             if (bgWorker != null)
             {
-                while (bgWorker.IsBusy) System.Threading.Thread.Sleep(1);
+                //while (bgWorker.IsBusy) System.Threading.Thread.Sleep(1);
                 //bgWorker.CancelAsync();
                 //while (bgWorker.IsBusy) System.Threading.Thread.Sleep(1);
                 bgWorker = null;
@@ -521,6 +521,7 @@ namespace SISyncronizer
 
         public void GetAllItems()
         {
+            if (BgWorkerGetAllItems == null) return;
             _SyncingItems++;
             Status = "Google: Получение списка ссылок...";
             BgWorkerGetAllItems.RunWorkerAsync();

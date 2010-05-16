@@ -149,6 +149,8 @@ namespace Nocs.Helpers
 // ReSharper restore InconsistentNaming
         private static bool IsInternetConnected()
         {
+            return true; // не будем проверять системными средствами наличие интернета. А то бывают ситуации, когда на компе его нет, однако доступен прокси на другом компе, тогда синхронизация не запускается
+
             const long dwConnectionFlags = 0;
             if (!InternetGetConnectedState(dwConnectionFlags, 0))
                 return false;

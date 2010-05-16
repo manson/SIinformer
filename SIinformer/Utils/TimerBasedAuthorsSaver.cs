@@ -43,7 +43,7 @@ namespace SIinformer.Utils
             timer.Start();
         }
 
-        private void CheckIfDataNeedToSave()
+        public void CheckIfDataNeedToSave()
         {
             // вызываем сохранение базы данных в нужном контексте (потоке)
             SIinformer.Window.MainWindow.MainForm.InvokeIfRequired(() =>
@@ -110,12 +110,18 @@ namespace SIinformer.Utils
                         if (GoogleSyncActive())
                             if (!google_monitor.IsSyncing())
                                 google_monitor.SyncWithGoogle();
-                        else
-                        {
-                            StartGoogleSync();
-                        }
+                            else
+                            {
+                                StartGoogleSync();
+                            }
                     }
                 }, DispatcherPriority.Background);
+            }
+            else
+            {
+                // проверим, монитор у нас существует или нет (возможно он в прошлый раз при остановке не успел выгрузиться)
+                if (GoogleSyncActive())
+                    StopGoogleSync();
             }
         }
 

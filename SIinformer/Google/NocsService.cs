@@ -1142,7 +1142,7 @@ namespace Nocs
                 !string.IsNullOrEmpty(ProxyPassword))
             {
                 var proxyUsername = ProxyUsername;
-                var proxyPassword = Tools.Decrypt(ProxyPassword);
+                var proxyPassword = ProxyPassword;// Tools.Decrypt(ProxyPassword);
                 proxy.UseDefaultCredentials = false;
                 proxy.Credentials = new NetworkCredential(proxyUsername, proxyPassword);
             }

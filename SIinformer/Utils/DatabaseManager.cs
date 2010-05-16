@@ -328,10 +328,11 @@ namespace SIinformer.Utils
                         {
                             var reader = new StringReader(categories_xml);
                             var sr = new XmlSerializer(typeof(CategoryList));
+                            list = (CategoryList)sr.Deserialize(reader);
                             foreach (Category category in list)
                                 category.SetOwner(list);
                             list.Reorder();
-                            return (CategoryList)sr.Deserialize(reader);
+                            return list;//(CategoryList)sr.Deserialize(reader);
                         }
                         catch
                         { }

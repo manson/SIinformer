@@ -109,10 +109,22 @@ namespace SIinformer.Utils
             return Encoding.GetEncoding("windows-1251").GetString(data);
         }
 
+        private static void _OpenUrl(object obj)
+        {
+            try
+            {
+                Process.Start((string)obj);
+            }
+            catch 
+            {}
+        }
         public static void OpenURL(string url)
         {
-            Thread thread = new Thread(obj => Process.Start((string) obj)) {IsBackground = true};
-            thread.Start(url);
+                ParameterizedThreadStart pts = new ParameterizedThreadStart(_OpenUrl);
+                //Thread thread = new Thread(obj => Process.Start((string)obj)) {  IsBackground = true };
+                Thread thread = new Thread(pts) { IsBackground = true };
+                thread.Start(url);
+
         }
     }
 }

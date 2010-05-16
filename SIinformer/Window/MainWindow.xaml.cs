@@ -213,17 +213,21 @@ namespace SIinformer.Window
                                            ToolTip = "Настройки программы",
                                            Content = "p",
                                        };
-            settingButton.Click += ((o, e) =>
-                                        {
-                                            currentUseDatabase = _setting.UseDatabase;                                            
-                                            SettingWindow settingWindow = new SettingWindow(_setting) {Owner = this};                                            
-                                            _setting = settingWindow.ShowDialog();
-                                            
-                                        });
+            settingButton.Click += ((o, e) =>ShowSettingsWindow());
             stackPanel.Children.Add(settingButton);
         }
 
         #endregion
+
+        /// <summary>
+        /// вызов окна настроек
+        /// </summary>
+        public void ShowSettingsWindow()
+        {
+            currentUseDatabase = _setting.UseDatabase;
+            SettingWindow settingWindow = new SettingWindow(_setting) { Owner = this };
+            _setting = settingWindow.ShowDialog();
+        }
 
         /// <summary>
         /// Реагирует на изменение некоторых настроек (сортировки, категории, правила для динамического окна)
@@ -1313,6 +1317,11 @@ namespace SIinformer.Window
             DownloadTextItem downloadTextItem = ((Button)e.OriginalSource).DataContext as DownloadTextItem;
             if (downloadTextItem == null) return;
             downloadTextItem.Stop();
+        }
+
+        private void MenuButton_Click(object sender, RoutedEventArgs e)
+        {
+            si_toolbar.Visibility = (si_toolbar.Visibility == Visibility.Visible) ? Visibility.Collapsed : Visibility.Visible;
         }
     }
 
