@@ -91,6 +91,17 @@ namespace SIinformer.Logic
         }
 
         /// <summary>
+        /// Получает путь к файлу различий с предыдущей версией для книги
+        /// </summary>
+        /// <param name="author">Автор книги</param>
+        /// <returns>Путь на диске</returns>
+        public string GetDiffFileName(Author author)
+        {
+            return GetCachedFileName(author).Replace(".shtml", "_diff.shtml");
+        }
+
+
+        /// <summary>
         /// Обновляет признак кешированности книги
         /// </summary>
         /// <param name="author">Автор - для создания правильного пути к файлу в кеше</param>
@@ -104,6 +115,35 @@ namespace SIinformer.Logic
         /// </summary>
         [XmlIgnore]
         public bool IsCached { get; set; }
+
+
+        bool _HasDiff = false;
+        /// <summary>
+        /// Вычисленная разница книги имеется в кеше?
+        /// </summary>
+        [XmlIgnore]
+        public bool HasDiff
+        {
+            get { return _HasDiff; }
+            set
+            {
+                if (_HasDiff != value)
+                {
+                    _HasDiff = value;
+                    RaisePropertyChanged("HasDiff");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Обновляет признак наличия файла отличий книги
+        /// </summary>
+        /// <param name="author">Автор - для создания правильного пути к файлу в кеше</param>
+        public void UpdateHasDiff(Author author)
+        {
+            HasDiff = File.Exists(GetDiffFileName(author));
+        }
+
 
         /// <summary>
         /// Отображаемая дата обновления книги

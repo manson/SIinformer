@@ -224,6 +224,7 @@
     <Compile Include="Logic\Updater.cs" />
     <Compile Include="Readers\DownloadTextHelper.cs" />
     <Compile Include="Readers\HTMLConverter\HtmlCssParser.cs" />
+    <Compile Include="Readers\HTMLConverter\HtmlDiff.cs" />
     <Compile Include="Readers\HTMLConverter\HtmlLexicalAnalyzer.cs" />
     <Compile Include="Readers\HTMLConverter\HtmlParser.cs" />
     <Compile Include="Readers\HTMLConverter\HtmlSchema.cs" />

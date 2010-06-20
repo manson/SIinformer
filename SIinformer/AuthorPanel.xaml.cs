@@ -413,7 +413,7 @@ namespace SIinformer
                             File.WriteAllText(sender.GetCachedFileName() + ".xaml", sender.Xaml, Encoding.GetEncoding(1251));
                         }
                         UpdateView(false);
-                        reader.ShowReader(sender.GetCachedFileName() + ".xaml", sender.AuthorText.Name);
+                        reader.ShowReader(sender.GetCachedFileName() + ".xaml", sender);
                         break;
                     case 3: // другая читалка
                         if (MainWindow.GetSettings().AlternativeReader.Trim().Length == 0)

@@ -13,6 +13,7 @@ using System.Windows.Data;
 using HTMLConverter;
 using SIinformer.Logic;
 using SIinformer.Utils;
+using System.Linq;
 
 namespace SIinformer.Readers
 {
@@ -129,6 +130,10 @@ namespace SIinformer.Readers
             return _author.GetHashCode() ^ AuthorText.GetHashCode();
         }
 
+        public Author GetAuthor()
+        {
+            return _author;
+        }
         /// <summary>
         /// Конструктор (при нахождении файла в кеше устанавливается свойство Text
         /// </summary>
@@ -199,6 +204,31 @@ namespace SIinformer.Readers
             }
         }
 
+        public string DiffXaml
+        {
+            get
+            {
+                string _diffxml = "";
+                // если есть файл xaml различий - грузим его
+                if (File.Exists(AuthorText.GetDiffFileName(_author) + ".xaml"))
+                {
+                    _diffxml=File.ReadAllText(AuthorText.GetDiffFileName(_author) + ".xaml", Encoding.GetEncoding(1251));
+                }
+                else// формируем xaml страничку для чтения
+                if (File.Exists(AuthorText.GetDiffFileName(_author)))
+                {
+                    _diffxml = File.ReadAllText(AuthorText.GetDiffFileName(_author), Encoding.GetEncoding(1251));
+                    _diffxml = HtmlToXamlConverter.ConvertHtmlToXaml(_diffxml, true).
+                        Replace("----------------------", "").
+                        Replace("<Run Foreground=\"Black\">", "<Run>").
+                        Replace("другие произведения.</Hyperlink>", "</Hyperlink>");
+                    File.WriteAllText(AuthorText.GetDiffFileName(_author) + ".xaml", _diffxml, Encoding.GetEncoding(1251));
+                }
+
+                return _diffxml;
+            }
+        }
+
         public int? ReaderType { get; set; }
 
         public void Start()
@@ -252,6 +282,82 @@ namespace SIinformer.Readers
                     Text = PostProcess(Text);
                     if (!Directory.Exists(Path.GetDirectoryName(GetCachedFileName())))
                         Directory.CreateDirectory(Path.GetDirectoryName(GetCachedFileName()));
+
+                    // надо проверить разницу с предыдущим текстом
+                    // для этого ищем предыдущий файл и сравниваем с ним, результат пишем в отдельный файл
+                    #region Вычисление изменений в тексте файла
+
+		                    string CachedFileName = Path.GetFileNameWithoutExtension(GetCachedFileName());
+                            // делаем так, потому что имя файла может поменяться. Мы ориентируемся на последний вариант в предположении,
+                            // что автор обновляет проду, а не перезаливает с новым именем
+                            // убираем штамп времени
+                            string[] name_parts = CachedFileName.Split(".".ToCharArray());
+                            if (name_parts.Length > 1)
+                            {
+                                string CachedFileNameWithoutTimeMask = "";
+                                for (int i = 0; i < name_parts.Length - 1; i++)
+                                {
+                                    CachedFileNameWithoutTimeMask = CachedFileNameWithoutTimeMask +
+                                        ((CachedFileNameWithoutTimeMask == "") ? name_parts[i] : "." + name_parts[i]);
+
+                                }
+                                CachedFileNameWithoutTimeMask = CachedFileNameWithoutTimeMask + ".";
+                                // берем последний закачанный файл
+                                var files = from f in Directory.GetFiles(Path.GetDirectoryName(GetCachedFileName()))
+                                            where Path.GetFileName(f).ToLower().StartsWith(CachedFileNameWithoutTimeMask.ToLower())
+                                            && Path.GetFileName(f).ToLower().EndsWith(".shtml")
+                                            orderby f
+                                            select f;
+                                string last_file = "";
+                                if (files.Count() > 0)
+                                    last_file = files.Last();
+
+                                // если такой есть, то проведем сравнение
+                                #region код вычисления различий
+                                // если текст больше 150 кило - небудем находить различия, ибо медленно
+                                if (Text.Length < 150 * 1024)
+                                {
+                                    if (!string.IsNullOrEmpty(last_file))
+                                    {
+                                        // засунем вычисления в отдельный поток, так как это медленная операция
+                                        System.ComponentModel.BackgroundWorker bw = new System.ComponentModel.BackgroundWorker();
+                                        bw.DoWork += (o, e1) =>
+                                        {
+                                            Logger.Add(string.Format("Нахождение различий в обновлении книги '{0}'.", AuthorText.Name));
+                                            Helpers.HtmlDiff diff = new Helpers.HtmlDiff(File.ReadAllText(last_file, Encoding.GetEncoding(1251)), Text);
+                                            string diff_file = "";
+                                            try
+                                            {
+                                                diff_file = diff.Build();
+                                            }
+                                            catch
+                                            { }
+                                            if (!string.IsNullOrEmpty(diff_file))
+                                            {
+                                                diff_file = diff_file.Replace("<head>", "<head><STYLE type=\"text/css\">table {border:1px solid #d9d9d9;} td {border:1px solid #d9d9d9; padding:3px;} ins {background-color: #00542E;text-decoration:inherit;} del {color: #999;	background-color:#FEC8C8;} ins.mod { background-color: #FFE1AC; }</STYLE>");
+                                                File.WriteAllText(
+                                                    Path.Combine(Path.GetDirectoryName(GetCachedFileName()), CachedFileName + "_diff.shtml"),
+                                                    diff_file, Encoding.GetEncoding(1251));
+                                                AuthorText.UpdateHasDiff(_author);
+
+                                            }
+                                            Logger.Add(string.Format("Файл различий в обновлении книги '{0}' сформирован.", AuthorText.Name));
+
+                                        };
+                                        bw.RunWorkerAsync();
+
+                                    }
+                                }
+                                else
+                                    Logger.Add(string.Format("Нахождение различий в обновлении книги '{0}' не будет произведено, оазмер превышает 150кб.", AuthorText.Name));
+                               #endregion
+                          
+                            }
+
+	                        
+                    #endregion
+
+
                     File.WriteAllText(GetCachedFileName(), Text, Encoding.GetEncoding(1251));
                     Logger.Add(string.Format("Книга '{0}' закачана.", AuthorText.Name));
                 }

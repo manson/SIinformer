@@ -4,6 +4,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:Window="clr-namespace:SIinformer.Window" 
+    xmlns:converter="clr-namespace:SIinformer.Readers"
     xmlns:Readers="clr-namespace:SIinformer.Readers" mc:Ignorable="d"
                Title="XamlReader" TitleAlignment="Center" Style="{StaticResource WindowStyle}" Template="{StaticResource WindowContentTemplate}" 
                WindowStartupLocation="CenterScreen" MouseLeftButtonDown="NonRectangularWindow_MouseLeftButtonDown" 
@@ -14,12 +15,17 @@
         <CommandBinding Command="Window:WindowCommands.Maximize" Executed="Maximize_Executed"/>
         <CommandBinding Command="Window:WindowCommands.Close" Executed="Close_Executed"/>
     </Window.CommandBindings>
+    <Window.Resources>
+        <converter:VisibilityConverter x:Key="VisibilityConverter"></converter:VisibilityConverter >
+    </Window.Resources>
 
-    <Grid Background="#FF333333" Margin="10,30,10,10">        
+        <Grid Background="#FF333333" Margin="10,30,10,10">        
         <Border CornerRadius="5" BorderThickness="1" BorderBrush="#FF606060">
             <Readers:MyFlowDocumentReader Background="#FF333333" x:Name="XamlReaderControl" Margin="10,10,10,10" Foreground="#FFCCCCCC" FontSize="11" 
                                 Zoom="{Binding Path=FlowDocumentZoom, Mode=OneTime}" ViewingMode="{Binding Path=FlowDocumentReaderViewingMode, Mode=OneTime}"
                                 FontFamily="Comic Sans MS"/>         
         </Border>
+        <Button Content="Различия" HorizontalAlignment="Left" FontSize="9" Margin="0,-20,0,0"  ToolTip="Посмотреть отличия от предыдущего текста" Name="SwitchTextsButton" VerticalAlignment="Top"  Visibility="{Binding HasDiff, Converter={StaticResource VisibilityConverter}}" Click="SwitchTextsButton_Click" />
     </Grid>
+    
 </Window:DarkWindow>
