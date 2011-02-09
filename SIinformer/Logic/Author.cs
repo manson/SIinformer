@@ -11,6 +11,15 @@ using SIinformer.Utils;
 
 namespace SIinformer.Logic
 {
+    /// <summary>
+    /// класс автора для хранения в бд, нужно из-за того, что при обновлении автора его объект Author полностью перестраивается
+    /// </summary>
+    public class AuthorDb4o
+    {
+        public string Id { get; set; }
+        public Author author { get; set; }
+    }
+
     public class Author : BindableObject
     {
         #region Private Fields
@@ -47,6 +56,8 @@ namespace SIinformer.Logic
 
         [XmlIgnore]
         public bool ChangedGoogle { get; set; }
+
+        
 
 
         /// <summary>
@@ -196,6 +207,23 @@ namespace SIinformer.Logic
                 {
                     _isUpdated = value;
                     RaisePropertyChanged("IsUpdated");
+                }
+            }
+        }
+
+        /// <summary>
+        /// удален. нужно для синхронизациию при загрузке из бд не показывается, не грузится
+        /// </summary>
+        bool _IsDeleted = false;
+        public bool IsDeleted
+        {
+            get { return _IsDeleted; }
+            set
+            {
+                if (_IsDeleted != value)
+                {
+                    _IsDeleted = value;
+                    RaisePropertyChanged("IsDeleted");
                 }
             }
         }

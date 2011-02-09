@@ -7,7 +7,7 @@
              mc:Ignorable="d" 
              >
     <Grid>
-        <Border Grid.Row="1" Grid.Column="1"  CornerRadius="5" Background="Black" Height="70" BorderBrush="#FF595959" BorderThickness="1">
+        <Border Grid.Row="1" Grid.Column="1"  CornerRadius="5" Background="Black" Height="50" BorderBrush="#FF595959" BorderThickness="1">
             <Border Grid.Row="1" Grid.Column="1"  CornerRadius="5" Background="#FF595959" Padding="1" Margin="1">
                 <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Width="80" Margin="2" ToolTip="Открыть настройки приложения" Click="SettingsButton_Click">
@@ -18,13 +18,13 @@
                         </Button.Content>
                     </Button>
 
-                    <Button Width="80" Margin="2" ToolTip="Синхронизировать данные с Гуглом (если это функция включена в настройках)" Click="SyncButton_Click">
+                    <!--<Button Width="80" Margin="2" ToolTip="Синхронизировать данные с Гуглом (если это функция включена в настройках)" Click="SyncButton_Click">
                         <Button.Content>
                             <TextBlock TextWrapping="Wrap" TextAlignment="Center" >
                                 Синхронизи-ровать с Гуглом
                             </TextBlock>
                         </Button.Content>
-                    </Button>
+                    </Button>-->
 
                     <Button Width="80" Margin="2" Command="{x:Static Window:MainCommands.UseCategoryCommand}" ToolTip="Включить/выключить использование категорий">
                         <Button.Content>

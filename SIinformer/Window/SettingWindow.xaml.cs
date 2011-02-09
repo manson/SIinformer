@@ -187,5 +187,11 @@ namespace SIinformer.Window
             ImportWindow iw = new ImportWindow();
             iw.ShowDialog();
         }
+
+        private void DoDefragmentAndBackupDB_Click(object sender, RoutedEventArgs e)
+        {
+            // создадим файл, говорящий, что нам понадобится сделать дефрагментацию и бекап БД при загрузке системы
+            File.CreateText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "do_defragment_backup")).Close();
+        }
     }
 }

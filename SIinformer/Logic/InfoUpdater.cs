@@ -13,8 +13,9 @@ using System.Windows.Data;
 using System.Windows.Threading;
 using SIinformer.Utils;
 using SIinformer.Window;
-using Monitor=SISyncronizer.Monitor;
+//using Monitor=SISyncronizer.Monitor;
 using Timer=System.Timers.Timer;
+using System.Threading.Tasks;
 
 namespace SIinformer.Logic
 {
@@ -42,15 +43,15 @@ namespace SIinformer.Logic
             _updater = new Updater(_setting, _logger);
             _updater.UpdaterComplete += UpdaterComplete;
 #if !DEBUG
-            if (!_setting.UseGoogle) // если указано синхронизироваться с гуглом, не запускаем сразу обновление, чтобы синхронизации успела отработать и скачать возможные изменени
+            //if (!_setting.UseGoogle) // если указано синхронизироваться с гуглом, не запускаем сразу обновление, чтобы синхронизации успела отработать и скачать возможные изменени
                 UpdateAuthors();
 #endif
 
 #if !DEBUG
-            if (!_setting.UseGoogle)
+           // if (!_setting.UseGoogle)
                 _updateTimer = new Timer {Interval = 3600000, AutoReset = false};
-            else // если используем гугл, то запускаем проверку обновления через 10 минут
-                _updateTimer = new Timer {Interval = 60000 * 10, AutoReset = false};
+            //else // если используем гугл, то запускаем проверку обновления через 10 минут
+           //     _updateTimer = new Timer {Interval = 60000 * 10, AutoReset = false};
 #else
             _updateTimer = new Timer { Interval = 60000, AutoReset = false};
 #endif
@@ -62,44 +63,44 @@ namespace SIinformer.Logic
                                                 {
                                                     UpdateIntervalAndStart();
                                                     _logger.Add("Периодичность обновления: " + IntervalOfUpdateConverter.Parse(_setting.IntervalOfUpdate));
-                                                }else if (e.PropertyName=="UseGoogle")
+                                                }//else if (e.PropertyName=="UseGoogle")
                                                 {
-                                                    if (_setting.UseGoogle)
-                                                        StartGoogleSync();
-                                                    else
-                                                        StopGoogleSync();                                            
+                                                    //if (_setting.UseGoogle)
+                                                    //    StartGoogleSync();
+                                                    //else
+                                                    //    StopGoogleSync();                                            
                                                 }
 
                                             };
 
             TimerBasedAuthorsSaver.StartMonitoring(false);
             // если указано синхронизироваться с Google
-            if (_setting.UseGoogle)
-            {                
-                StartGoogleSync();
-                _updateTimer.Start(); // ручками толкаем таймер, так как мы пропустили этап обновлений, где он запускается
-            }
+            //if (_setting.UseGoogle)
+            //{                
+            //    StartGoogleSync();
+            //    _updateTimer.Start(); // ручками толкаем таймер, так как мы пропустили этап обновлений, где он запускается
+            //}
         }
-        public static void StartGoogleSync()
-        {
-            if (TimerBasedAuthorsSaver.GetInstance().GoogleSyncActive()) return;
-            if (string.IsNullOrEmpty(_setting.GoogleLogin) || string.IsNullOrEmpty(_setting.GooglePassword))
-            {
-                _logger.Add("Запуск синхронизации с Google невозможен, так как не указан логин или пароль", true, true);
-                return;
-            }
-            _logger.Add("Запуск синхронизации с Google...", true);
-            TimerBasedAuthorsSaver.GetInstance().StartGoogleSync();
-            _logger.Add("Cинхронизация с Google запущена.", true);
-        }
+        //public static void StartGoogleSync()
+        //{
+        //    if (TimerBasedAuthorsSaver.GetInstance().GoogleSyncActive()) return;
+        //    if (string.IsNullOrEmpty(_setting.GoogleLogin) || string.IsNullOrEmpty(_setting.GooglePassword))
+        //    {
+        //        _logger.Add("Запуск синхронизации с Google невозможен, так как не указан логин или пароль", true, true);
+        //        return;
+        //    }
+        //    _logger.Add("Запуск синхронизации с Google...", true);
+        //    TimerBasedAuthorsSaver.GetInstance().StartGoogleSync();
+        //    _logger.Add("Cинхронизация с Google запущена.", true);
+        //}
 
-        public static void StopGoogleSync()
-        {
-            if (!TimerBasedAuthorsSaver.GetInstance().GoogleSyncActive()) return;
-            _logger.Add("Останавливается синхронизация с Google...", true);
-            TimerBasedAuthorsSaver.GetInstance().StopGoogleSync();
-            _logger.Add("Cинхронизация с Google остановлена.", true);
-        }
+        //public static void StopGoogleSync()
+        //{
+        //    if (!TimerBasedAuthorsSaver.GetInstance().GoogleSyncActive()) return;
+        //    _logger.Add("Останавливается синхронизация с Google...", true);
+        //    TimerBasedAuthorsSaver.GetInstance().StopGoogleSync();
+        //    _logger.Add("Cинхронизация с Google остановлена.", true);
+        //}
 
 
         /// <summary>
@@ -116,6 +117,18 @@ namespace SIinformer.Logic
 
         public static void LoadDataFromXml()
         {
+            if (File.Exists(AuthorsFileName) && File.Exists(CategoriesFileName))
+            {
+                string time_stamp = DateTime.Now.ToString().Replace(" ", "_").Replace(":", "_").Replace("/","_");
+                string backup_file = string.Format("authorts.{0}.xml", time_stamp);
+                string backup_file_cat = string.Format("categories.{0}.xml", time_stamp);
+                string backup_path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Backups");
+                if (!Directory.Exists(backup_path)) Directory.CreateDirectory(backup_path);
+                backup_file = Path.Combine(backup_path, backup_file);
+                backup_file_cat = Path.Combine(backup_path, backup_file_cat);
+                File.Copy(AuthorsFileName, backup_file);
+                File.Copy(CategoriesFileName, backup_file_cat);
+            }
             Authors = AuthorList.Load(AuthorsFileName);
             Categories = CategoryList.Load(CategoriesFileName);
             foreach (Author author in Authors)            
@@ -257,6 +270,12 @@ namespace SIinformer.Logic
         {
             AuthorUpdates au = AuthorUpdates.FindWindow(author);
             if (au != null) au.Close();
+            if (MainWindow.GetSettings().UseDatabase)
+            {
+                author.IsDeleted = true;// помечаем, что удален
+                MainWindow.MainForm.GetDatabaseManager().SaveAuthor(author); // сохраняем удаленный статус
+            }
+
             Authors.Remove(author);
         }
 
@@ -324,24 +343,29 @@ namespace SIinformer.Logic
             }
             else
             {
-                if (SaveAll)
-                {
-                    foreach (Author author in Authors)                    
-                        author.Changed = false;                    
-                    Authors.Save(AuthorsFileName);
-                    Categories.Save(CategoriesFileName);
-                }else // запишем только, если есть авторы с изменившимися данными
-                {
-                    if ((from a in Authors
-                         where a.Changed
-                         select a).Count() > 0)
-                    {
-                        foreach (Author author in Authors)
-                            author.Changed = false;
-                        Authors.Save(AuthorsFileName);                        
-                    }
-                    Categories.Save(CategoriesFileName);
-                }
+                // запускаем сохранение в отдельном потоке
+                Task.Factory.StartNew(() =>
+              {
+                  if (SaveAll)
+                  {
+                      foreach (Author author in Authors)
+                          author.Changed = false;
+                      Authors.Save(AuthorsFileName);
+                      Categories.Save(CategoriesFileName);
+                  }
+                  else // запишем только, если есть авторы с изменившимися данными
+                  {
+                      if ((from a in Authors
+                           where a.Changed
+                           select a).Count() > 0)
+                      {
+                          foreach (Author author in Authors)
+                              author.Changed = false;
+                          Authors.Save(AuthorsFileName);
+                      }
+                      Categories.Save(CategoriesFileName);
+                  }
+              });
             }
         }
 

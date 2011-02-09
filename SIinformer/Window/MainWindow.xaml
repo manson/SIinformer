@@ -8,10 +8,10 @@
     xmlns:Xaml="clr-namespace:SIinformer.Xaml" 
     xmlns:Readers="clr-namespace:SIinformer.Readers" mc:Ignorable="d"
     x:Class="SIinformer.Window.MainWindow" Title="Информатор СИ" 
-    MaximizeButtonVisibility="Collapsed" WindowState="Normal" Closing="DarkWindow_Closing" MouseLeftButtonDown="NonRectangularWindow_MouseLeftButtonDown" 
+    MaximizeButtonVisibility="Visible" WindowState="Normal" Closing="DarkWindow_Closing" MouseLeftButtonDown="NonRectangularWindow_MouseLeftButtonDown" 
     Template="{DynamicResource WindowContentTemplate}" Style="{DynamicResource WindowStyle}" 
     WindowStartupLocation="Manual" Top="{Binding Path=Top,Mode=TwoWay}" Left="{Binding Path=Left,Mode=TwoWay}" Height="351" Width="359" 
-    IsVisibleChanged="DarkWindow_IsVisibleChanged" SourceInitialized="DarkWindow_SourceInitialized"> 
+    IsVisibleChanged="DarkWindow_IsVisibleChanged" SourceInitialized="DarkWindow_SourceInitialized" ResizeMode="CanResizeWithGrip" WindowStyle="None"> 
 
     <Window:DarkWindow.Resources>
         <Xaml:ListBoxDataTemplateSelector x:Key="ListBoxDataTemplateSelector"/>
@@ -73,6 +73,7 @@
     
     <Window:DarkWindow.CommandBindings>
         <CommandBinding Command="Window:WindowCommands.Minimize" Executed="Minimize_Executed"/>
+        <CommandBinding Command="Window:WindowCommands.Maximize" Executed="Maximize_Executed"/>
         <CommandBinding Command="Window:WindowCommands.Close" Executed="Close_Executed"/>
         <CommandBinding Command="{x:Static Window:MainCommands.DeleteAuthorOrCategoryCommand}" 
                         Executed="DeleteAuthorOrCategoryCommand_Executed" CanExecute="AuthorOrCategoryListBoxIsNotNullAndCategoryIsEmpty" />

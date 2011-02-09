@@ -14,19 +14,13 @@ namespace SIinformer.Logic
 
         private void Retreive()
         {
+           
             Add(new Author
                     {
-                        Name = "Чужин",
+                        Name = "Конторович Александр Сергеевич",
                         IsNew = false,
                         UpdateDate = DateTime.Now,
-                        URL = "http://zhurnal.lib.ru/c/chushin_i_a/"
-                    });
-            Add(new Author
-                    {
-                        Name = "Хазарх",
-                        IsNew = false,
-                        UpdateDate = DateTime.Now,
-                        URL = "http://zhurnal.lib.ru/h/harzah_w/"
+                        URL = "http://zhurnal.lib.ru/k/kontorowich_a_s/"
                     });
             Add(new Author
                     {
@@ -35,6 +29,13 @@ namespace SIinformer.Logic
                         UpdateDate = DateTime.Now,
                         URL = "http://zhurnal.lib.ru/k/kotow_w_n/"
                     });
+            Add(new Author
+            {
+                Name = "Ясинский Анджей",
+                IsNew = false,
+                UpdateDate = DateTime.Now,
+                URL = "http://zhurnal.lib.ru/p/pupkin_wasja_ibragimowich/"
+            });
             _isDefault = true;
         }
 
@@ -47,6 +48,14 @@ namespace SIinformer.Logic
         {
             AuthorList result;
             bool isCorrect = false;
+            if (!File.Exists(authorsFileName))
+            {
+                result = new AuthorList();
+                result.Retreive();
+                result.Save(authorsFileName);
+                return result;
+            }
+
             try
             {
                 // перегоняем файл в память (быстро)

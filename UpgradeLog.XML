@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type='text/xsl' href='_UpgradeReport_Files/UpgradeReport.xslt'?><UpgradeLog>
+<Properties><Property Name="Solution" Value="SIinformer_vs2010">
+</Property><Property Name="Solution File" Value="I:\MANSON\myProjects\NET_3\SIinformer_13\SIinformer_vs2010.sln">
+</Property><Property Name="Date" Value="6 мая 2010 г.">
+</Property><Property Name="Time" Value="21:34">
+</Property></Properties><Event ErrorLevel="0" Project="SIinformer" Source="SIinformer\SIinformer.csproj" Description="Project converted successfully">
+</Event><Event ErrorLevel="3" Project="SIinformer" Source="SIinformer\SIinformer.csproj" Description="Converted">
+</Event><Event ErrorLevel="0" Project="" Source="SIinformer_vs2010.sln" Description="Solution converted successfully">
+</Event><Event ErrorLevel="3" Project="" Source="SIinformer_vs2010.sln" Description="Converted">
+</Event><Event ErrorLevel="0" Project="SIinformer" Source="SIinformer\SIinformer.csproj" Description="Scan complete: Upgrade not required for project files.">
+</Event></UpgradeLog>

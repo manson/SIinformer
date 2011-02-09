@@ -87,7 +87,8 @@ namespace SIinformer.Window
                 if (MessageBox.Show("Сконвертировать данные из xml файла в базу данных?","Сообщение", MessageBoxButton.YesNo,MessageBoxImage.Question)==MessageBoxResult.No)
                     swithing = false;
             }
-            databaseManager = new DatabaseManager(swithing);
+            if (databaseManager==null)
+                databaseManager = new DatabaseManager(swithing);
         }
 
         /// <summary>
@@ -958,6 +959,11 @@ namespace SIinformer.Window
             HideWindow();
         }
 
+        private void Maximize_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+        }
+
         private void Close_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             _closeHowToMinimize = true;
@@ -1323,6 +1329,7 @@ namespace SIinformer.Window
         {
             si_toolbar.Visibility = (si_toolbar.Visibility == Visibility.Visible) ? Visibility.Collapsed : Visibility.Visible;
         }
+
     }
 
     public static class MainCommands
