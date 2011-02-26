@@ -56,6 +56,9 @@ namespace SIinformer.Logic
                 return result;
             }
 
+            // .bak файл сохраняем там же, где и основное приложение
+            var authorsBakFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
+                Path.GetFileName(authorsFileName) + ".bak");
             try
             {
                 // перегоняем файл в память (быстро)
@@ -79,7 +82,7 @@ namespace SIinformer.Logic
                                                      MessageBoxImage.Warning, MessageBoxResult.Yes) ==
                     MessageBoxResult.Yes)
                 {
-                    result = Load(authorsFileName + ".bak", true);
+                    result = Load(authorsBakFileName, true);
                 }
                 else
                 {
@@ -91,7 +94,7 @@ namespace SIinformer.Logic
             // создаем резервную копию
             try
             {
-                if (!isBackupLoad && isCorrect) result.Save(authorsFileName + ".bak");
+                if (!isBackupLoad && isCorrect) result.Save(authorsBakFileName);
             }
             catch
             {
@@ -104,8 +107,7 @@ namespace SIinformer.Logic
         {
             if (_isDefault)
             {
-                if (
-                    MessageBox.Show("Производится автоматическое сохранение списка авторов\r\n\r\n" +
+                if (MessageBox.Show("Производится автоматическое сохранение списка авторов\r\n\r\n" +
                                     "В результате последней загрузки был сформирован список авторов ПО УМОЛЧАНИЮ.\r\n" +
                                     "В случае его сохранения Ваш список авторов будет утерян (если он есть).\r\n" +
                                     "Вы уверены, что хотите сохранить?", "ВНИМАНИЕ", MessageBoxButton.YesNo,
@@ -138,7 +140,7 @@ namespace SIinformer.Logic
             List<string> result = new List<string>();
             foreach (Author author in this)
             {
-                if (!result.Contains(author.Category))
+                if (!result.Contains(author.Category) && !author.IsDeleted)
                     result.Add(author.Category);
             }
             return result.ToArray();

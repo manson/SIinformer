@@ -270,13 +270,11 @@ namespace SIinformer.Logic
         {
             AuthorUpdates au = AuthorUpdates.FindWindow(author);
             if (au != null) au.Close();
+            author.IsDeleted = true;// помечаем, что удален
             if (MainWindow.GetSettings().UseDatabase)
-            {
-                author.IsDeleted = true;// помечаем, что удален
                 MainWindow.MainForm.GetDatabaseManager().SaveAuthor(author); // сохраняем удаленный статус
-            }
 
-            Authors.Remove(author);
+            //Authors.Remove(author);
         }
 
         #endregion
@@ -345,27 +343,27 @@ namespace SIinformer.Logic
             {
                 // запускаем сохранение в отдельном потоке
                 Task.Factory.StartNew(() =>
-              {
-                  if (SaveAll)
-                  {
-                      foreach (Author author in Authors)
-                          author.Changed = false;
-                      Authors.Save(AuthorsFileName);
-                      Categories.Save(CategoriesFileName);
-                  }
-                  else // запишем только, если есть авторы с изменившимися данными
-                  {
-                      if ((from a in Authors
-                           where a.Changed
-                           select a).Count() > 0)
-                      {
-                          foreach (Author author in Authors)
-                              author.Changed = false;
-                          Authors.Save(AuthorsFileName);
-                      }
-                      Categories.Save(CategoriesFileName);
-                  }
-              });
+                {
+                    if (SaveAll)
+                    {
+                        foreach (Author author in Authors)
+                            author.Changed = false;
+                        Authors.Save(AuthorsFileName);
+                        Categories.Save(CategoriesFileName);
+                    }
+                    else // запишем только, если есть авторы с изменившимися данными
+                    {
+                        if ((from a in Authors
+                             where a.Changed
+                             select a).Count() > 0)
+                        {
+                            foreach (Author author in Authors)
+                                author.Changed = false;
+                            Authors.Save(AuthorsFileName);
+                        }
+                        Categories.Save(CategoriesFileName);
+                    }
+                });
             }
         }
 
@@ -533,7 +531,7 @@ namespace SIinformer.Logic
                     if (category.Collapsed) continue;
                     foreach (Author author in authorCollectionView)
                     {
-                        if (author.Category == category.Name)
+                        if (author.Category == category.Name && !author.IsDeleted)
                             tempList.Add(author);
                     }
                 }
@@ -614,12 +612,12 @@ namespace SIinformer.Logic
 
         private static string AuthorsFileName
         {
-            get { return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "authorts.xml"); }
+            get { return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Data\authorts.xml"); }
         }
 
         private static string CategoriesFileName
         {
-            get { return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "categories.xml"); }
+            get { return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Data\categories.xml"); }
         }
 
         #endregion

@@ -31,7 +31,7 @@ namespace SIinformer.Utils
 
         private string db_name 
         {
-            get { return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Authors.db4o"); }
+            get { return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Data\Authors.db4o"); }
         }
         /// <summary>
         /// Создать менеджер

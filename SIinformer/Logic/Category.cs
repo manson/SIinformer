@@ -155,8 +155,9 @@ namespace SIinformer.Logic
             int counterIsNew = 0;
             foreach (Author author in authorList)
             {
-                if (author.Category == Name) counter++;
-                if ((author.Category == Name) && (author.IsNew)) counterIsNew++;
+                if (author.IsDeleted || author.Category != Name) continue;
+                counter++;
+                if (author.IsNew) counterIsNew++;
             }
             VisualName = counterIsNew == 0
                              ? string.Format("{0} ({1})", Name, counter)

@@ -58,7 +58,7 @@ namespace SIinformer.Utils
                     (SystemInformation.WorkingArea.Height - AuthorWindowSettingDictionary["Default"].Size.Height)/2);
 
             ProxySetting = new ProxySetting();
-            RSSFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "siinformer.rss");
+            RSSFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Data\siinformer.rss");
             RSSCount = 100;
             AfterUpdater = "";
             BeforeUpdater = "";

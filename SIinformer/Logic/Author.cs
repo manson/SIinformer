@@ -205,6 +205,7 @@ namespace SIinformer.Logic
             {
                 if (_isUpdated != value)
                 {
+                    Changed = true;// данные изменены (для записи в БД)
                     _isUpdated = value;
                     RaisePropertyChanged("IsUpdated");
                 }
@@ -222,6 +223,7 @@ namespace SIinformer.Logic
             {
                 if (_IsDeleted != value)
                 {
+                    Changed = true;// данные изменены (для записи в БД)
                     _IsDeleted = value;
                     RaisePropertyChanged("IsDeleted");
                 }
