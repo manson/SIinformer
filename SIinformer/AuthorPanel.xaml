@@ -1,7 +1,6 @@
 ﻿<UserControl x:Class="SIinformer.AuthorPanel"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:vsm="clr-namespace:System.Windows;assembly=WPFToolkit"
     xmlns:si="clr-namespace:SIinformer">
 
     <UserControl.Resources>

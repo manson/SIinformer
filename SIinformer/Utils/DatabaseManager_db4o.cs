@@ -134,6 +134,15 @@ namespace SIinformer.Utils
 
         }
 
+         /// <summary>
+        /// Сохранение автора в БД в отдельном потоке, например при удалении автора, чтобы не тормозил интерфейс
+        /// </summary>
+        /// <param name="author"></param>
+        public void SaveAuthorThreaded(Author author)
+        {
+            Task.Factory.StartNew(() => SaveAuthor(author));
+        }
+
         /// <summary>
         /// Загрузка авторов из БД
         /// </summary>

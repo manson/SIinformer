@@ -272,9 +272,10 @@ namespace SIinformer.Logic
             if (au != null) au.Close();
             author.IsDeleted = true;// помечаем, что удален
             if (MainWindow.GetSettings().UseDatabase)
-                MainWindow.MainForm.GetDatabaseManager().SaveAuthor(author); // сохраняем удаленный статус
+                MainWindow.MainForm.GetDatabaseManager().SaveAuthorThreaded(author); // сохраняем удаленный статус асинхронно
 
             //Authors.Remove(author);
+            Refresh();// перерисовывем списко авторов
         }
 
         #endregion
@@ -497,7 +498,7 @@ namespace SIinformer.Logic
 
             #region Создаем преставление данных из списка Authors, фильруем, сортируем
 
-            ListCollectionView authorCollectionView = new ListCollectionView(Authors);
+            ListCollectionView authorCollectionView = new ListCollectionView(Authors.Where(a=>!a.IsDeleted).ToList());
             authorCollectionView.Filter += CheckIncludeAuthorInCollection;
             switch (_sortProperty)
             {
@@ -531,7 +532,7 @@ namespace SIinformer.Logic
                     if (category.Collapsed) continue;
                     foreach (Author author in authorCollectionView)
                     {
-                        if (author.Category == category.Name && !author.IsDeleted)
+                        if (author.Category == category.Name)//&& !author.IsDeleted - сюда больше не попадают удаленные авторы, см. создание authorCollectionView в начале функции
                             tempList.Add(author);
                     }
                 }
