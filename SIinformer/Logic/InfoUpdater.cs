@@ -58,20 +58,20 @@ namespace SIinformer.Logic
             _updateTimer.Elapsed += (o, e) => UpdateAuthors();
 
             _setting.PropertyChanged += (o, e) =>
-                                            {
-                                                if (e.PropertyName == "IntervalOfUpdate")
-                                                {
-                                                    UpdateIntervalAndStart();
-                                                    _logger.Add("Периодичность обновления: " + IntervalOfUpdateConverter.Parse(_setting.IntervalOfUpdate));
-                                                }//else if (e.PropertyName=="UseGoogle")
-                                                {
-                                                    //if (_setting.UseGoogle)
-                                                    //    StartGoogleSync();
-                                                    //else
-                                                    //    StopGoogleSync();                                            
-                                                }
-
-                                            };
+            {
+                if (e.PropertyName == "IntervalOfUpdate")
+                {
+                    UpdateIntervalAndStart();
+                    _logger.Add("Периодичность обновления: " + IntervalOfUpdateConverter.Parse(_setting.IntervalOfUpdate));
+                }
+                //else if (e.PropertyName=="UseGoogle")
+                {
+                    //if (_setting.UseGoogle)
+                    //    StartGoogleSync();
+                    //else
+                    //    StopGoogleSync();                                            
+                }
+            };
 
             TimerBasedAuthorsSaver.StartMonitoring(false);
             // если указано синхронизироваться с Google
@@ -102,7 +102,6 @@ namespace SIinformer.Logic
         //    _logger.Add("Cинхронизация с Google остановлена.", true);
         //}
 
-
         /// <summary>
         /// Очистим стутус, показывающий, что данные изменились. 
         /// После загрузки из БД и xml они показывают true (так как не хранятся там)
@@ -115,52 +114,58 @@ namespace SIinformer.Logic
             }
         }
 
+        public static void RestoreFileFromBinFolder(string srcFilePath)
+        {
+            if (!File.Exists(srcFilePath))
+            {
+                // пробуем найти файл в папке приложения. Это на случай первого после добавления папки Data запуска
+                var binFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileName(srcFilePath));
+                if (File.Exists(binFilePath))
+                    File.Copy(binFilePath, srcFilePath);
+            }
+        }
+
+        public static void CreateBackupFile(string srcFilePath, string backupFileName)
+        {
+            RestoreFileFromBinFolder(srcFilePath);
+            if (File.Exists(srcFilePath))
+                File.Copy(srcFilePath, Path.Combine(BackupsFolder, backupFileName));
+        }
+
         public static void LoadDataFromXml()
         {
-            if (File.Exists(AuthorsFileName) && File.Exists(CategoriesFileName))
-            {
-                string time_stamp = DateTime.Now.ToString().Replace(" ", "_").Replace(":", "_").Replace("/","_");
-                string backup_file = string.Format("authorts.{0}.xml", time_stamp);
-                string backup_file_cat = string.Format("categories.{0}.xml", time_stamp);
-                string backup_path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Backups");
-                if (!Directory.Exists(backup_path)) Directory.CreateDirectory(backup_path);
-                backup_file = Path.Combine(backup_path, backup_file);
-                backup_file_cat = Path.Combine(backup_path, backup_file_cat);
-                File.Copy(AuthorsFileName, backup_file);
-                File.Copy(CategoriesFileName, backup_file_cat);
-            }
-            Authors = AuthorList.Load(AuthorsFileName);
+            if (!Directory.Exists(BackupsFolder)) Directory.CreateDirectory(BackupsFolder);
+            var time_stamp = TimeStamp; // DateTime.Now.ToString().Replace(" ", "_").Replace(":", "_").Replace("/", "_");
+
+            CreateBackupFile(CategoriesFileName, string.Format("categories.{0}.xml", time_stamp));
             Categories = CategoryList.Load(CategoriesFileName);
-            foreach (Author author in Authors)            
+
+            CreateBackupFile(AuthorsFileName, string.Format("authorts.{0}.xml", time_stamp));
+            Authors = AuthorList.Load(AuthorsFileName);
+
+            foreach (var author in Authors)            
                 author.CheckID();            
         }
 
         public static void LoadDataFromDatabase()
         {
-            Authors = MainWindow.MainForm.GetDatabaseManager().LoadAuthors();
+            Authors    = MainWindow.MainForm.GetDatabaseManager().LoadAuthors();
             Categories = MainWindow.MainForm.GetDatabaseManager().LoadCategories();
         }
-
-
 
         public static bool ContainsAuthor(string id)
         {
             foreach (Author author in Authors)
-            {
                 if (author.Id == id) return true;
-            }
             return false;
         }
 
         public static Author GetAuthorById(string id)
         {
             foreach (Author author in Authors)
-                if (author.Id == id)
-                    return author;
+                if (author.Id == id) return author;
             return null;
         }
-
-
 
         public static CategoryList Categories { get; private set; }
         public static AuthorList Authors { get; private set; }
@@ -272,9 +277,10 @@ namespace SIinformer.Logic
             if (au != null) au.Close();
             author.IsDeleted = true;// помечаем, что удален
             if (MainWindow.GetSettings().UseDatabase)
-                MainWindow.MainForm.GetDatabaseManager().SaveAuthor(author); // сохраняем удаленный статус
+                MainWindow.MainForm.GetDatabaseManager().SaveAuthorThreaded(author); // сохраняем удаленный статус асинхронно
 
             //Authors.Remove(author);
+            Refresh();// перерисовывем списко авторов
         }
 
         #endregion
@@ -497,7 +503,7 @@ namespace SIinformer.Logic
 
             #region Создаем преставление данных из списка Authors, фильруем, сортируем
 
-            ListCollectionView authorCollectionView = new ListCollectionView(Authors);
+            ListCollectionView authorCollectionView = new ListCollectionView(Authors.Where(a=>!a.IsDeleted).ToList());
             authorCollectionView.Filter += CheckIncludeAuthorInCollection;
             switch (_sortProperty)
             {
@@ -531,7 +537,7 @@ namespace SIinformer.Logic
                     if (category.Collapsed) continue;
                     foreach (Author author in authorCollectionView)
                     {
-                        if (author.Category == category.Name && !author.IsDeleted)
+                        if (author.Category == category.Name)//&& !author.IsDeleted - сюда больше не попадают удаленные авторы, см. создание authorCollectionView в начале функции
                             tempList.Add(author);
                     }
                 }
@@ -618,6 +624,16 @@ namespace SIinformer.Logic
         private static string CategoriesFileName
         {
             get { return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Data\categories.xml"); }
+        }
+
+        public static string BackupsFolder
+        {
+            get { return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Backups"); }
+        }
+
+        public static string TimeStamp
+        {
+            get { return DateTime.Now.ToString("yyyy-MM-dd_HH_mm_ss"); }
         }
 
         #endregion
