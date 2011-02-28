@@ -118,6 +118,8 @@ namespace SIinformer.Logic
         {
             if (!File.Exists(srcFilePath))
             {
+                if (!Directory.Exists(Path.GetDirectoryName(srcFilePath)))
+                    Directory.CreateDirectory(Path.GetDirectoryName(srcFilePath));
                 // пробуем найти файл в папке приложения. Это на случай первого после добавления папки Data запуска
                 var binFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.GetFileName(srcFilePath));
                 if (File.Exists(binFilePath))
