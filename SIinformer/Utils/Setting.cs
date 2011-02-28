@@ -30,7 +30,7 @@ namespace SIinformer.Utils
                 {
                     "Default", new AdvancedWindowSetting
                     {
-                        HeightComment = 100
+                        HeightComment = 100,
                         Size = new Size(SystemInformation.WorkingArea.Width / 2, SystemInformation.WorkingArea.Height / 3 * 2),
                     }
                 }
