@@ -38,6 +38,7 @@ namespace SIinformer.Utils
         /// <param name="Switching">Переключаемся в режим БД или просто открываем менеджер. True - переключаемся(нужна конвертация)</param>
         public DatabaseManager(bool Switching)
         {
+            InfoUpdater.RestoreFileFromBinFolder(db_name); // переносим бд в папку Data, если ее там еще нет, а находится она в каталоге программы
             switching = Switching;
             bool newDB = false;
             if (!File.Exists(db_name))
@@ -139,15 +140,7 @@ namespace SIinformer.Utils
         {
             Task.Factory.StartNew(() => SaveAuthor(author));
         }
-
-        /// <summary>
-        /// Сохранение автора в БД в отдельном потоке, например при удалении автора, чтобы не тормозил интерфейс
-        /// </summary>
-        /// <param name="author"></param>
-        public void SaveAuthorThreaded(Author author)
-        {
-            Task.Factory.StartNew(() => SaveAuthor(author));
-        }
+       
 
         /// <summary>
         /// Загрузка авторов из БД
@@ -336,7 +329,7 @@ namespace SIinformer.Utils
             if (!Directory.Exists(InfoUpdater.BackupsFolder)) Directory.CreateDirectory(InfoUpdater.BackupsFolder);
             string backup_file = string.Format("authors.{0}.db4o", InfoUpdater.TimeStamp); //DateTime.Now.ToString()).Replace(" ", "_").Replace(":", "_");
             backup_file = Path.Combine(InfoUpdater.BackupsFolder, backup_file);
-            InfoUpdater.RestoreFileFromBinFolder(db_name);
+            
             // дефрагментируем БД
             SIinformer.Window.MainWindow.MainForm.GetLogger().Add(DateTime.Now.ToString() + "  Дефрагментируется база данных...", true, false);
             Defragment.Defrag(db_name, backup_file);
@@ -349,7 +342,7 @@ namespace SIinformer.Utils
             if (IsCoverting) return;
             if (server != null) return;
             try
-            {
+            {               
                 var server_config = Db4oClientServer.NewServerConfiguration();
                 server_config.Common.AllowVersionUpdates = true;
                 server_config.Common.Add(new TransparentActivationSupport());
