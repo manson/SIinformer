@@ -114,7 +114,7 @@ namespace SIinformer.Utils
             {                
                 using (IObjectContainer documentStore = server.OpenClient())
                 {
-                    var _author = documentStore.Query<AuthorDb4o>(x => x.Id == author.Id).FirstOrDefault();
+                    var _author = documentStore.Query<AuthorDb4o>(x => x!=null && x.Id == author.Id).FirstOrDefault();
                     if (_author != null)
                     {
                         _author.author = author;
@@ -158,7 +158,7 @@ namespace SIinformer.Utils
 
                     using (IObjectContainer documentStore = server.OpenClient())
                     {
-                        var authors = documentStore.Query<AuthorDb4o>(x => !x.author.IsDeleted);
+                        var authors = documentStore.Query<AuthorDb4o>(x => x!=null && !x.author.IsDeleted);
                         foreach (var author in authors)
                         {
                             author.author.Changed = false;
@@ -229,15 +229,18 @@ namespace SIinformer.Utils
 
                     foreach (var category in categories)
                     {
-                        var _category = documentStore.Query<Category>(x => x.Name == category.Name).FirstOrDefault();
-                        if (_category != null)
+                        if (category != null)
                         {
-                            _category.Name = category.Name;
-                            documentStore.Delete(_category);
-                            documentStore.Store(_category);
+                            var _category = documentStore.Query<Category>(x => x!=null && x.Name == category.Name).FirstOrDefault();
+                            if (_category != null)
+                            {
+                                _category.Name = category.Name;
+                                documentStore.Delete(_category);
+                                documentStore.Store(_category);
+                            }
+                            else
+                                documentStore.Store(category);
                         }
-                        else
-                            documentStore.Store(category);
                     }                                            
                     documentStore.Commit();
                 }
@@ -271,7 +274,8 @@ namespace SIinformer.Utils
                     if (categories.Count() > 0)
                     {
                         foreach (var category in categories)
-                            list.Add(category);
+                            if (category!=null)
+                                list.Add(category);
                     }
                     else
                     {
