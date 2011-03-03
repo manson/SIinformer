@@ -26,32 +26,25 @@ namespace SIinformer.Utils
             DesiredPositionAdvancedWindow = DesiredPositionAdvancedWindow.Auto;
             AdvancedWindowVisibleStyle = AdvancedWindowVisibleStyle.Always;
             AdvancedWindowSettingDictionary = new SerializableDictionary<string, AdvancedWindowSetting>
-                                                  {
-                                                      {
-                                                          "Default", new AdvancedWindowSetting
-                                                                         {
-                                                                             Size =
-                                                                                 new Size(
-                                                                                 SystemInformation.WorkingArea.Width/2,
-                                                                                 SystemInformation.WorkingArea.Height/3*
-                                                                                 2),
-                                                                             HeightComment = 100
-                                                                         }
-                                                          }
-                                                  };
+            {
+                {
+                    "Default", new AdvancedWindowSetting
+                    {
+                        HeightComment = 100,
+                        Size = new Size(SystemInformation.WorkingArea.Width / 2, SystemInformation.WorkingArea.Height / 3 * 2),
+                    }
+                }
+            };
             AuthorWindowSettingDictionary = new SerializableDictionary<string, AuthorWindowSetting>
-                                                {
-                                                    {
-                                                        "Default", new AuthorWindowSetting
-                                                                       {
-                                                                           HeightComment = 100,
-                                                                           Size =
-                                                                               new Size(
-                                                                               SystemInformation.WorkingArea.Width/2,
-                                                                               SystemInformation.WorkingArea.Height/3*2),
-                                                                       }
-                                                        }
-                                                };
+            {
+                {
+                    "Default", new AuthorWindowSetting
+                    {
+                        HeightComment = 100,
+                        Size = new Size(SystemInformation.WorkingArea.Width / 2, SystemInformation.WorkingArea.Height / 3 * 2),
+                    }
+                }
+            };
             AuthorWindowSettingDictionary["Default"].Location =
                 new Point(
                     (SystemInformation.WorkingArea.Width - AuthorWindowSettingDictionary["Default"].Size.Width)/2,

@@ -20,7 +20,6 @@ namespace SIinformer.Utils
 {
     public class DatabaseManager
     {
-
         public IObjectServer server = null;
 
         bool IsCoverting = false;
@@ -100,8 +99,6 @@ namespace SIinformer.Utils
 
         }
 
-
-
         #region Авторы
         object _locker = new object();
         /// <summary>
@@ -135,6 +132,15 @@ namespace SIinformer.Utils
         }
 
          /// <summary>
+        /// Сохранение автора в БД в отдельном потоке, например при удалении автора, чтобы не тормозил интерфейс
+        /// </summary>
+        /// <param name="author"></param>
+        public void SaveAuthorThreaded(Author author)
+        {
+            Task.Factory.StartNew(() => SaveAuthor(author));
+        }
+
+        /// <summary>
         /// Сохранение автора в БД в отдельном потоке, например при удалении автора, чтобы не тормозил интерфейс
         /// </summary>
         /// <param name="author"></param>
@@ -178,7 +184,6 @@ namespace SIinformer.Utils
             return list;
         }
 
-
         /// <summary>
         /// Конвертация автора из Xml в объект Author
         /// </summary>
@@ -214,12 +219,9 @@ namespace SIinformer.Utils
             return sb.ToString();
         }
 
-
         #endregion
 
         #region Категории
-
-        
 
         /// <summary>
         /// Сохранить категории
@@ -297,11 +299,10 @@ namespace SIinformer.Utils
             return list;
         }
 
-
         #endregion
 
-#region Работа с БД
-		        /// <summary>
+        #region Работа с БД
+        /// <summary>
         /// Очистка БД
         /// </summary>
         private void ClearDB()
@@ -330,11 +331,12 @@ namespace SIinformer.Utils
 
         public void DefragmentDB()
         {
+
             if (server != null) server.Close();
-            string backup_file = string.Format("authors.{0}.db4o", DateTime.Now.ToString()).Replace(" ","_").Replace(":","_");
-            string backup_path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Backups");
-            if (!Directory.Exists(backup_path)) Directory.CreateDirectory(backup_path);
-            backup_file = Path.Combine(backup_path, backup_file);
+            if (!Directory.Exists(InfoUpdater.BackupsFolder)) Directory.CreateDirectory(InfoUpdater.BackupsFolder);
+            string backup_file = string.Format("authors.{0}.db4o", InfoUpdater.TimeStamp); //DateTime.Now.ToString()).Replace(" ", "_").Replace(":", "_");
+            backup_file = Path.Combine(InfoUpdater.BackupsFolder, backup_file);
+            InfoUpdater.RestoreFileFromBinFolder(db_name);
             // дефрагментируем БД
             SIinformer.Window.MainWindow.MainForm.GetLogger().Add(DateTime.Now.ToString() + "  Дефрагментируется база данных...", true, false);
             Defragment.Defrag(db_name, backup_file);
@@ -357,7 +359,6 @@ namespace SIinformer.Utils
                     File.Delete(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "do_defragment_backup"));
                 }
                 server = Db4oClientServer.OpenServer(server_config, db_name, 0);
-
             }
             catch (Exception ex)
             {
@@ -371,6 +372,6 @@ namespace SIinformer.Utils
         {
         }
 
-	#endregion    
+        #endregion
     }
 }
