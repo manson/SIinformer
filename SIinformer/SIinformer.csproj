@@ -208,6 +208,7 @@
     <Compile Include="Utils\RSS.cs" />
     <Compile Include="Utils\SerializableDictionary.cs" />
     <Compile Include="Utils\TimerBasedAuthorsSaver.cs" />
+    <Compile Include="Utils\UpdateService.cs" />
     <Compile Include="Utils\WPFThreadsExtension.cs" />
     <Compile Include="Window\AdvancedAuthorWindow.xaml.cs">
       <DependentUpon>AdvancedAuthorWindow.xaml</DependentUpon>
@@ -328,6 +329,12 @@
       <ProductName>Установщик Windows 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AutoUpdater\AutoUpdater\AutoUpdater.csproj">
+      <Project>{4BA4719C-C6AB-49BA-9754-848CA24C1FD6}</Project>
+      <Name>AutoUpdater</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

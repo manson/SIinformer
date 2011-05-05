@@ -68,6 +68,9 @@ namespace SIinformer.Window
             // биндинг этих свойств вынесен в код, иначе в xaml окно схлопывается
             SetBinding(HeightProperty, new Binding {Path = new PropertyPath("Height"), Mode = BindingMode.TwoWay});
             SetBinding(WidthProperty, new Binding {Path = new PropertyPath("Width"), Mode = BindingMode.TwoWay});
+
+            // запустить сервис обновления
+            UpdateService.GetInstance().StartUpdate();
         }
 
         #region Инициализация

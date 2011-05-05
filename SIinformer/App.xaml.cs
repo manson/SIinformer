@@ -174,4 +174,6 @@ namespace SIinformer
             SendMessage(HwndBroadcast, WmFontchange, IntPtr.Zero, IntPtr.Zero);
         }
     }
+
+
 }
