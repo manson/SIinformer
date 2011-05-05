@@ -34,13 +34,13 @@ namespace SIinformer.Controls
 
         private void SyncButton_Click(object sender, RoutedEventArgs e)
         {
-            if (!SIinformer.Utils.TimerBasedAuthorsSaver.GetInstance().SynchroGoogle)
+            if (!Utils.TimerBasedAuthorsSaver.GetInstance().SynchroGoogle)
             {
                 MainWindow.MainForm.GetLogger().Add("Синхронизация с Гуглом невозможна, так как она не настроена.");
                 return;
             }
             MainWindow.MainForm.GetLogger().Add("Синхронизация с Google запущена.");
-            SIinformer.Utils.TimerBasedAuthorsSaver.GetInstance().CheckIfDataNeedToSave();
+            Utils.TimerBasedAuthorsSaver.GetInstance().CheckIfDataNeedToSave();
         }
     }
 }

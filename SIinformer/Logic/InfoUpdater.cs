@@ -184,6 +184,11 @@ namespace SIinformer.Logic
             Application.Current.Dispatcher.Invoke(DispatcherPriority.Background, new ThreadStart(delegate { }));
 
             if (!url.ToLowerInvariant().StartsWith("http://")) url = "http://" + url;
+
+            // Если URL заканчивается на index.shtml, преобразовать его в нужный
+            if (url.EndsWith("index.shtml"))
+                url = url.Replace("index.shtml", "indexdate.shtml");
+
             if (!url.EndsWith("indexdate.shtml"))
                 url = (url.EndsWith("/")) ? url + "indexdate.shtml" : url + "/indexdate.shtml";
 

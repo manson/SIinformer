@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Xml.Serialization;
 
@@ -117,7 +116,7 @@ namespace SIinformer.Logic
                 }
             }
             // сериализует в память
-            MemoryStream mstream = new MemoryStream();
+            var mstream = new MemoryStream();
             using (var st = new StreamWriter(mstream))
             {
                 var sr = new XmlSerializer(typeof(AuthorList));
@@ -137,13 +136,11 @@ namespace SIinformer.Logic
 
         public string[] GetCategoryNames()
         {
-            List<string> result = new List<string>();
-            foreach (Author author in this)
-            {
-                if (!result.Contains(author.Category) && !author.IsDeleted)
-                    result.Add(author.Category);
-            }
-            return result.ToArray();
+            return this
+                .Where(_ => !_.IsDeleted)
+                .Select(_ => _.Category)
+                .Distinct()
+                .ToArray();
         }
     }
 }

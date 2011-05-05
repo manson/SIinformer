@@ -144,9 +144,10 @@ namespace SIinformer.Logic
 
         #region Public Method
 
-        public void SetOwner(CategoryList categoryList)
+        public Category SetOwner(CategoryList categoryList)
         {
             Owner = categoryList;
+            return this;
         }
 
         public void SetVisualNameAndIsNew(ListCollectionView authorList)
