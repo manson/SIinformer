@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -96,15 +97,7 @@ namespace SIinformer.Logic
         /// <param name="e">игнорируется</param>
         private void TextsListChanged(object sender, ListChangedEventArgs e)
         {
-            bool summaryIsNew = false;
-            foreach (AuthorText authorText in Texts)
-            {
-                if (authorText.IsNew)
-                {
-                    summaryIsNew = true;
-                    break;
-                }
-            }
+            bool summaryIsNew = Texts.Any(authorText => authorText.IsNew);
             IsNew = summaryIsNew;
         }
 
@@ -415,21 +408,21 @@ namespace SIinformer.Logic
                     {
                         bool bFound = false;
                         int OldSize = 0; // стрый размер текста
-                        for (int i = 0; i < Texts.Count; i++)
+                        foreach (AuthorText t in Texts)
                         {
-                            if (txt.Link == Texts[i].Link)
+                            if (txt.Link == t.Link)
                             {
-                                txt.Cached = Texts[i].Cached;
-                                OldSize = Texts[i].Size;// запоминаем старый размер, чтобы запомнить его в новом тексте
+                                txt.Cached = t.Cached;
+                                OldSize = t.Size;// запоминаем старый размер, чтобы запомнить его в новом тексте
                             }
-                            if (txt.Description == Texts[i].Description
-                                && txt.Name == Texts[i].Name
-                                && txt.Size == Texts[i].Size)
+                            if (txt.Description == t.Description
+                                && txt.Name == t.Name
+                                && txt.Size == t.Size)
                             {
                                 bFound = true;
                                 // переносим значение isNew в новый массив, чтобы не потерять непрочитанные новые тексты
-                                txt.IsNew = Texts[i].IsNew;
-                                txt.UpdateDate = Texts[i].UpdateDate;                                
+                                txt.IsNew = t.IsNew;
+                                txt.UpdateDate = t.UpdateDate;                                
                                 break;
                             }
                         }

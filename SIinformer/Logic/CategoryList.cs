@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace SIinformer.Logic
@@ -54,8 +55,12 @@ namespace SIinformer.Logic
                 if (category.Name.Trim() == name.Trim())
                     return category;
             }
-            Category result = new Category {Name = name, Index = Count};
-            result.SetOwner(this);
+            var result = new Category
+                             {
+                                 Name = name,
+                                 Index = Count
+                             }
+                .SetOwner(this);
             Add(result);
             Reorder();
             return result;
@@ -71,11 +76,7 @@ namespace SIinformer.Logic
 
         public bool Contains(string item)
         {
-            foreach (Category category in Items)
-            {
-                if (category.Name == item) return true;
-            }
-            return false;
+            return Items.Any(category => category.Name == item);
         }
     }
 }
