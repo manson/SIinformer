@@ -13,27 +13,27 @@ namespace SIinformer.Logic
 
         private void Retreive()
         {
-           
+           // Дефолтный список авторов должен заканчиваться на indexdate.shtml, чтобы избежать дублирования при добавлении
             Add(new Author
                     {
                         Name = "Конторович Александр Сергеевич",
                         IsNew = false,
                         UpdateDate = DateTime.Now,
-                        URL = "http://zhurnal.lib.ru/k/kontorowich_a_s/"
+                        URL = "http://samlib.ru/k/kontorowich_a_s/indexdate.shtml"
                     });
             Add(new Author
                     {
                         Name = "Конюшевский В.Н.",
                         IsNew = false,
                         UpdateDate = DateTime.Now,
-                        URL = "http://zhurnal.lib.ru/k/kotow_w_n/"
+                        URL = "http://samlib.ru/k/kotow_w_n/indexdate.shtml"
                     });
             Add(new Author
             {
                 Name = "Ясинский Анджей",
                 IsNew = false,
                 UpdateDate = DateTime.Now,
-                URL = "http://zhurnal.lib.ru/p/pupkin_wasja_ibragimowich/"
+                URL = "http://samlib.ru/p/pupkin_wasja_ibragimowich/indexdate.shtml"
             });
             _isDefault = true;
         }
@@ -129,9 +129,8 @@ namespace SIinformer.Logic
 
         public Author FindAuthor(string url)
         {
-            foreach (Author a in this)
-                if (a.URL == url) return a;
-            return null;
+            // Если в базе все еще хранится zhurnal.lib.ru, делаем поиск по измененному урлу.
+            return this.FirstOrDefault(a => a.URL.Replace("zhurnal.lib.ru", "samlib.ru") == url);
         }
 
         public string[] GetCategoryNames()

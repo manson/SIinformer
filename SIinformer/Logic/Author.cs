@@ -506,27 +506,13 @@ namespace SIinformer.Logic
                                         Regex.Replace(
                                             Regex.Replace(
                                                 Regex.Replace(
-                                                    Regex.Replace(Regex.Replace(s, "&#([0-9]+);?", delegate(Match match)
-                                                                                                       {
-                                                                                                           var ch =
-                                                                                                               (char)
-                                                                                                               int.Parse
-                                                                                                                   (match
-                                                                                                                        .
-                                                                                                                        Groups
-                                                                                                                        [
-                                                                                                                        1
-                                                                                                                        ]
-                                                                                                                        .
-                                                                                                                        Value,
-                                                                                                                    NumberStyles
-                                                                                                                        .
-                                                                                                                        Integer);
-                                                                                                           return
-                                                                                                               ch.
-                                                                                                                   ToString
-                                                                                                                   ();
-                                                                                                       }), "&bull;?",
+                                                    Regex.Replace(
+                                                         Regex.Replace(s, "&#([0-9]+);?",
+                                                                 delegate(Match match)
+                                                                 {
+                                                                     var ch = (char) int.Parse(match.Groups[1].Value, NumberStyles.Integer);
+                                                                     return ch.ToString();
+         }), "&bull;?",
                                                                   " * ", RegexOptions.IgnoreCase), "&lsaquo;?", "<",
                                                     RegexOptions.IgnoreCase), "&rsaquo;?", ">", RegexOptions.IgnoreCase),
                                             "&trade;?", "(tm)", RegexOptions.IgnoreCase), "&frasl;?", "/",

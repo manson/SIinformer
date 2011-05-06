@@ -179,13 +179,16 @@ namespace SIinformer.Logic
         public static Author AddAuthor(string url)
         {
             _logger.Add("Добавление автора...");
+            // Перевести URL на samlib.ru
+            url = url.ToLowerInvariant().Replace("zhurnal.lib.ru", "samlib.ru");
 
             // аналог DoEvents в WPF, иначе "Добавление автора..." вообще не появляется, т.к. метод синхронный
             Application.Current.Dispatcher.Invoke(DispatcherPriority.Background, new ThreadStart(delegate { }));
 
-            if (!url.ToLowerInvariant().StartsWith("http://")) url = "http://" + url;
+            if (!url.StartsWith("http://")) url = "http://" + url;
 
-            // Если URL заканчивается на index.shtml, преобразовать его в нужный
+            
+            // Если URL заканчивается на index.shtml, преобразовать его в нужный)
             if (url.EndsWith("index.shtml"))
                 url = url.Replace("index.shtml", "indexdate.shtml");
 
@@ -366,9 +369,7 @@ namespace SIinformer.Logic
                     }
                     else // запишем только, если есть авторы с изменившимися данными
                     {
-                        if ((from a in Authors
-                             where a.Changed
-                             select a).Count() > 0)
+                        if (Authors.Any(a => a.Changed))
                         {
                             foreach (Author author in Authors)
                                 author.Changed = false;
@@ -397,12 +398,7 @@ namespace SIinformer.Logic
                 Save();
                 _logger.Add("Производится проверка обновлений...");
 
-                List<Author> updatedAuthor = new List<Author>();
-                foreach (Author author in Authors)
-                {
-                    if (!author.IsIgnored)
-                        updatedAuthor.Add(author);
-                }
+                var updatedAuthor = Authors.Where(author => !author.IsIgnored).ToList();
                 try
                 {
                     if (_setting.AfterUpdater.Trim() != "")
