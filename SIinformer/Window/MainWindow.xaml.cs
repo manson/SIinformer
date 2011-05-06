@@ -147,7 +147,8 @@ namespace SIinformer.Window
             DownloadTextHelper.Init(downloadHelper, _logger, _setting);
             downloadHelper.ItemsSource = DownloadTextHelper.DownloadTextItems;
 
-            AuthorsListBox.SelectedItem = InfoUpdater.Authors.FindAuthor(_setting.LastAuthorUrl);
+            AuthorsListBox.SelectedItem =
+                InfoUpdater.Authors.FindAuthor(_setting.LastAuthorUrl.Replace("zhurnal.lib.ru", "samlib.ru"));
             AuthorsListBox.Focus();
             SetFocusToSelectedItem();
 

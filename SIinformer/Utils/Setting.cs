@@ -599,7 +599,7 @@ namespace SIinformer.Utils
 
         public void SaveToXML(AuthorList authors)
         {
-            Clearning(authors);
+            Cleaning(authors);
             var xs = new XmlSerializer(typeof (Setting));
             var sb = new StringBuilder();
             var w = new StringWriter(sb, CultureInfo.InvariantCulture);
@@ -613,7 +613,7 @@ namespace SIinformer.Utils
         /// и дефолтных размеров
         /// </summary>
         /// <param name="authors"></param>
-        private void Clearning(AuthorList authors)
+        private void Cleaning(AuthorList authors)
         {
             string[] keys = new string[AdvancedWindowSettingDictionary.Keys.Count];
             AdvancedWindowSettingDictionary.Keys.CopyTo(keys, 0);
@@ -639,10 +639,10 @@ namespace SIinformer.Utils
                 if ((key != "Default") && (authors.FindAuthor(key) == null))
                     AuthorWindowSettingDictionary.Remove(key);
             }
-            Dictionary<string, AuthorWindowSetting> copy1 =
+            var copy1 =
                 new Dictionary<string, AuthorWindowSetting>(AuthorWindowSettingDictionary);
             AuthorWindowSetting @default1 = AuthorWindowSettingDictionary["Default"];
-            foreach (KeyValuePair<string, AuthorWindowSetting> pair in copy1)
+            foreach (var pair in copy1)
             {
                 if ((pair.Key != "Default") && (pair.Value.Size == @default1.Size) &&
                     (pair.Value.Location == @default1.Location) && (pair.Value.HeightComment == @default1.HeightComment))
