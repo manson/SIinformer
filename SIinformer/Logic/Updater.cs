@@ -56,6 +56,7 @@ namespace SIinformer.Logic
 
         private void WorkerRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
+            App.BalanceInterval = 0;// обнуляем стартовый баланс
             if (!ManualUpdater)
                 _logger.Working = false;
             if (e.Cancelled)
@@ -70,6 +71,7 @@ namespace SIinformer.Logic
             List<Author> list = (List<Author>) e.Argument;
 
             int index = 1;
+            int authorsCnt = list.Count;
             foreach (Author author in list)
             {
                 if (_worker.CancellationPending)
@@ -135,6 +137,38 @@ namespace SIinformer.Logic
                 SyncRun(Action.IsUpdaterFalse, author);
 
                 index++;
+                // задержка, если проверка больше одного автора
+                if (authorsCnt > 1)
+                {
+                    var period = _setting.IntervalOfUpdate*3600; // весь период обновлений
+                    var rnd = new Random();
+                    var waitSpan = period/authorsCnt;
+                    if (App.BalanceInterval > 0)
+                        waitSpan = App.BalanceInterval;
+                    else
+                    {
+                        waitSpan = waitSpan < 10 ? rnd.Next(10, 30) : waitSpan;
+                        waitSpan = waitSpan > 30 ? 30 : waitSpan;
+                    }
+                    while (waitSpan > 0)
+                    {
+                        SyncRun(Action.SetStatus,
+                                new SetStatusParam
+                                    {
+                                        Message =
+                                            string.Format("->Балансировка нагрузки: ожидание {0} секунд(ы)...", waitSpan),
+                                        ToMessage = true,
+                                        IsError = false
+                                    });
+                        if (_worker.CancellationPending)
+                        {
+                            e.Cancel = true;
+                            return;
+                        }
+                        Thread.Sleep(1000);
+                        waitSpan--;
+                    }
+                }
             }
 
             List<Author> cachedAuthors = new List<Author>();
@@ -143,6 +177,7 @@ namespace SIinformer.Logic
             {
                 foreach (AuthorText authorText in author.Texts)
                 {
+                    if (string.IsNullOrWhiteSpace(authorText.Name)) continue;
                     authorText.UpdateIsCached(author);
                     if ((authorText.IsNew) && (!authorText.IsCached))
                     {

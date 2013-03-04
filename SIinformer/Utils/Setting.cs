@@ -20,7 +20,7 @@ namespace SIinformer.Utils
         public Setting()
         {
             Height = 510;
-            Width = 347;
+            Width = 647;
             Top = SystemInformation.WorkingArea.Top + (SystemInformation.WorkingArea.Height - Height)/2;
             Left = SystemInformation.WorkingArea.Left + (SystemInformation.WorkingArea.Width - Width)/2;
             DesiredPositionAdvancedWindow = DesiredPositionAdvancedWindow.Auto;
@@ -62,10 +62,15 @@ namespace SIinformer.Utils
             BookConverter = "";
             BookConverterParam = "";
             MaxCacheSize = 50;
+            AdvancedWindowVisibleStyle = AdvancedWindowVisibleStyle.AlwaysPanel;
         }
 
         public bool CloseHowToMinimize { get; set; }
         public ProxySetting ProxySetting { get; set; }
+        /// <summary>
+        /// Урл, где смотреть обновления
+        /// </summary>
+        public string ProgramUpdatesUrl { get; set; }
 
         /// <summary>
         /// Использовать синхронизацию с гуглом
@@ -600,14 +605,18 @@ namespace SIinformer.Utils
         public void SaveToXML(AuthorList authors)
         {
             Cleaning(authors);
-            var xs = new XmlSerializer(typeof (Setting));
+            SaveToXML();
+        }
+
+        public void SaveToXML()
+        {
+            var xs = new XmlSerializer(typeof(Setting));
             var sb = new StringBuilder();
             var w = new StringWriter(sb, CultureInfo.InvariantCulture);
             xs.Serialize(w, this,
-                         new XmlSerializerNamespaces(new[] {new XmlQualifiedName(string.Empty)}));
+                         new XmlSerializerNamespaces(new[] { new XmlQualifiedName(string.Empty) }));
             File.WriteAllText(SettingFileName, sb.ToString());
         }
-
         /// <summary>
         /// Очистка размеров и положений окон авторов от удаленных авторов
         /// и дефолтных размеров
@@ -668,8 +677,23 @@ namespace SIinformer.Utils
 
         public double Top { get; set; }
         public double Left { get; set; }
-        public double Height { get; set; }
-        public double Width { get; set; }
+        public double Height
+        {
+            get { return _height<=0 ? 200 : _height; }
+            set
+            {
+                _height = value <= 0 ? 200 : value;
+            }
+        }
+
+        public double Width
+        {
+            get { return _width<=0?200:_width; }
+            set
+            {
+                _width = value<=0 ? 200 : value;                
+            }
+        }
 
         #endregion
 
@@ -759,6 +783,9 @@ namespace SIinformer.Utils
         private string _afterUpdaterParam;
         private string _beforeUpdater;
         private string _beforeUpdaterParam;
+        private double _width;
+        private double _height;
+        private string _lastAuthorUrl="";
 
         public string AfterUpdater
         {
@@ -812,7 +839,11 @@ namespace SIinformer.Utils
             }
         }
 
-        public string LastAuthorUrl { get; set; }
+        public string LastAuthorUrl
+        {
+            get { return _lastAuthorUrl; }
+            set { _lastAuthorUrl = value; }
+        }
 
         #endregion
 

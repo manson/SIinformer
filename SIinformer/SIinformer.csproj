@@ -14,8 +14,13 @@
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
-    <ApplicationIcon>books24.ico</ApplicationIcon>
+    <ApplicationIcon>favicon.ico</ApplicationIcon>
     <IsWebBootstrapper>false</IsWebBootstrapper>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
+    <TargetFrameworkProfile />
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -30,11 +35,6 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <OldToolsVersion>3.5</OldToolsVersion>
-    <UpgradeBackupLocation />
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -192,6 +192,8 @@
       <DependentUpon>ToolBar.xaml</DependentUpon>
     </Compile>
     <Compile Include="Logic\Author.cs" />
+    <Compile Include="Logic\ProgramUpdater.cs" />
+    <Compile Include="Logic\TextCleaner.cs" />
     <Compile Include="Logic\Updater.cs" />
     <Compile Include="Readers\DownloadTextHelper.cs" />
     <Compile Include="Readers\HTMLConverter\HtmlCssParser.cs" />
@@ -208,7 +210,6 @@
     <Compile Include="Utils\RSS.cs" />
     <Compile Include="Utils\SerializableDictionary.cs" />
     <Compile Include="Utils\TimerBasedAuthorsSaver.cs" />
-    <Compile Include="Utils\UpdateService.cs" />
     <Compile Include="Utils\WPFThreadsExtension.cs" />
     <Compile Include="Window\AdvancedAuthorWindow.xaml.cs">
       <DependentUpon>AdvancedAuthorWindow.xaml</DependentUpon>
@@ -282,9 +283,6 @@
     <Resource Include="books24.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\books.ico" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="update.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -301,7 +299,7 @@
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
       <Visible>False</Visible>
-      <ProductName>Профиль клиента .NET Framework</ProductName>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
     <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
@@ -331,9 +329,15 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AutoUpdater\AutoUpdater\AutoUpdater.csproj">
-      <Project>{4BA4719C-C6AB-49BA-9754-848CA24C1FD6}</Project>
-      <Name>AutoUpdater</Name>
+    <Resource Include="Resources\favicon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="favicon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\manson_autoupdater\manson_autoupdater_client\manson_autoupdater_client\Manson.AutoUpdater.Client.csproj">
+      <Project>{15767046-2bb6-4641-9138-51f9985de871}</Project>
+      <Name>Manson.AutoUpdater.Client</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

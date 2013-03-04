@@ -80,7 +80,7 @@ namespace SIinformer.Utils
             IsCoverting = false;
         }
 
-        public void Save(bool SaveAll)
+        public void Save(bool SaveAll, Action saved=null)
         {
             if (IsCoverting) return;
             // запускаем сохранение в отдельном потоке
@@ -95,6 +95,7 @@ namespace SIinformer.Utils
                         }
                     }
                     SaveCategories(InfoUpdater.Categories);
+                    if (saved != null) saved();
                 }
             );
 

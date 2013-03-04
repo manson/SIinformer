@@ -220,6 +220,8 @@
                 <Label Grid.Column="1" x:Name="StatusLabel" Margin="5,0,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Center" 
                        Foreground="{Binding Path=Foreground}" Content="{Binding Path=Message}" MouseDown="StatusLabel_MouseUp">
                 </Label>
+                <Label Grid.Column="1" x:Name="VersionLabel" Margin="5,0,10,0" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="Gray">
+                </Label>
         </Grid>
     </Grid>
 </Window:DarkWindow>

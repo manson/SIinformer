@@ -232,37 +232,48 @@ namespace SIinformer
             if (view == null) return;
             int startsCategoryCount = _category.Count;
             _outputCollection.Clear();
-            foreach (CollectionViewGroup @group in view.Groups)
+            if (view.Groups!=null)
             {
-                CategoryText categoryText =
-                    GetCategoryFromName(@group.Name.ToString());
-                if (categoryText == null)
-                {
-                    categoryText = new CategoryText
-                                       {
-                                           Name = @group.Name.ToString(),
-                                           Collapsed = true
-                                       };
-                    _category.Add(categoryText);
-                }
-                categoryText.SetVisualNameAndIsNew(@group.Items);
-                // если список категорий был пуст (т.е. тексты автора обновились полностью)
-                // и в категории есть новые произведение, то раскрыть
-                if ((startsCategoryCount == 0) && (categoryText.IsNew))
-                    categoryText.Collapsed = false;
-                _outputCollection.Add(categoryText);
-                if (!categoryText.Collapsed)
-                {
-                    foreach (object item in @group.Items)
-                    {
-                        _outputCollection.Add(item);
-                    }
-                }
+                foreach (CollectionViewGroup @group in view.Groups)            
+                ShowTextByGroup(@group, startsCategoryCount);
+            }else
+            {
+                ShowTextByGroup(null, startsCategoryCount);
             }
+            
             authorTextsListBox.Visibility = Visibility.Visible;
 
             authorTextsListBox.SelectedItem = selItem;
             SetFocusToSelectedItem();
+        }
+
+        private void ShowTextByGroup(CollectionViewGroup @group, int startsCategoryCount)
+        {
+            if (@group==null) return;
+            CategoryText categoryText =
+                GetCategoryFromName(@group==null ? "" : @group.Name.ToString());
+            if (categoryText == null)
+            {
+                categoryText = new CategoryText
+                    {
+                        Name = @group == null ? "" : @group.Name.ToString(),
+                        Collapsed = true
+                    };
+                _category.Add(categoryText);
+            }
+            categoryText.SetVisualNameAndIsNew(@group.Items);
+            // если список категорий был пуст (т.е. тексты автора обновились полностью)
+            // и в категории есть новые произведение, то раскрыть
+            if ((startsCategoryCount == 0) && (categoryText.IsNew))
+                categoryText.Collapsed = false;
+            _outputCollection.Add(categoryText);
+            if (!categoryText.Collapsed)
+            {
+                foreach (object item in @group.Items)
+                {
+                    _outputCollection.Add(item);
+                }
+            }
         }
 
         #endregion
@@ -388,8 +399,8 @@ namespace SIinformer
                     else ItemDownloadTextComplete(item, null);
                     break;
                 case 2: // Aj-reader
-                    string aj = "http://zhurnal.lib.ru/img/m/mertwyj_o_a/aj.shtml?" +
-                                url.Replace("http://zhurnal.lib.ru/", "");
+                    string aj = "http://samlib.ru/img/m/mertwyj_o_a/aj.shtml?" +
+                                url.Replace("http://samlib.ru/", "");
                     WEB.OpenURL(aj.Trim());
                     break;
                 default:

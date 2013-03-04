@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -8,6 +9,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Resources;
 using System.Windows.Threading;
+using Manson.AutoUpdater;
 using SIinformer.Utils;
 using SIinformer.Window;
 using FontStyle = System.Drawing.FontStyle;
@@ -19,10 +21,56 @@ namespace SIinformer
     /// </summary>
     public partial class App
     {
+        public static string Version="";
+        public static string ExecutableFile="";
+        private static Client _programUpdater;
+        private static int _balanceInterval=5;
+
+        public static Manson.AutoUpdater.Client ProgramUpdater
+        {
+            get { return _programUpdater; }            
+        }
+        /// <summary>
+        /// интервал балансировки при старте (первом запуске)
+        /// по умолчанию пока ставим 5 сек. Потом апдейтер обнулит его, а значит будет использовать автоматическую балансировку
+        /// </summary>
+        public static int BalanceInterval
+        {
+            get { return _balanceInterval; }
+            set { _balanceInterval = value; }
+        }
+
         public App()
         {
             try
             {
+
+                #region Все, что связано с обновлением программы
+                // текущая версия программы
+                Version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                ExecutableFile = System.Reflection.Assembly.GetEntryAssembly().Location; // ссылка на екзешник, который надо запустить после обновления, то есть на информер
+                // если в настройках не указан другой адрес, берем умольчальный
+                Setting setting = Setting.LoadFromXml();
+                var ProgramUpdatesUrl = "http://mt2007-cat.ru/downloads/siinformer/version.txt";
+                if (string.IsNullOrWhiteSpace(setting.ProgramUpdatesUrl))
+                {
+                    setting.ProgramUpdatesUrl = "http://mt2007-cat.ru/downloads/siinformer/version.txt";
+                    setting.SaveToXML();// сохраним умольчальный адрес
+                }
+                else
+                    ProgramUpdatesUrl = setting.ProgramUpdatesUrl;
+
+                _programUpdater = new Client("siinformer", Version, ProgramUpdatesUrl); // создаем апдейтер
+                if (!_programUpdater.IsErrorUpdating()) // если после последнего обновления не было ошибок. Если были, то этот момент мы отработаем уже в интерфейсе после  загрузки интерфейса
+                    if (_programUpdater.IsPendingUpdate())// если ожидается обновление, то есть обнова распакована, но почему-то во время работы программы оно не пыло применено
+                    {
+                        if (_programUpdater.ApplyUpdate(ExecutableFile))// если все нормально с запуском программы обновления, выходим
+                            Process.GetCurrentProcess().Kill();// самоубийство                        
+                    }
+
+
+                #endregion
+
                 var testFont = new Font("Monotype Corsiva", 16.0f, FontStyle.Italic);
                 if (testFont.Name != "Monotype Corsiva")
                 {
@@ -31,9 +79,8 @@ namespace SIinformer
                     {
                         string fontsDir = Path.Combine(windir, "fonts");
                         if (Directory.Exists(fontsDir))
-                        {
+                        { 
                             string dest = Path.Combine(fontsDir, "MTCORSVA.TTF");
-                            if (!File.Exists(dest))
                             {
                                 StreamResourceInfo sri =
                                     GetResourceStream(new Uri("pack://application:,,,/Resources/MTCORSVA.TTF"));

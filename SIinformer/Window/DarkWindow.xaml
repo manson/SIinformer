@@ -101,7 +101,7 @@
     </ControlTemplate>
 
     <Style x:Key="WindowStyle" TargetType="{x:Type Window:DarkWindow}">
-        <Setter Property="Icon" Value="/SIinformer;component/books.ico"/>
+        <Setter Property="Icon" Value="/SIinformer;component/Resources/favicon.ico"/>
         <Setter Property="Visibility" Value="Visible"/>
         <Setter Property="WindowStyle" Value="None"/>
         <Setter Property="ResizeMode" Value="CanResizeWithGrip"/>
@@ -257,30 +257,7 @@
     <!--Circule button-->
     <ControlTemplate x:Key="CirculeButton" TargetType="{x:Type Button}">
         <Grid>
-            <!-- убрал анимацию, глючит при установке IsEnabled для кнопки, остается круг -->
-            <!--<vsm:VisualStateManager.VisualStateGroups>
-                <vsm:VisualStateGroup x:Name="VisualStateGroup">
-                    <vsm:VisualStateGroup.Transitions>
-                        <vsm:VisualTransition From="Normal" GeneratedDuration="00:00:00.3000000" To="MouseOver" />
-                        <vsm:VisualTransition From="MouseOver" GeneratedDuration="00:00:00.5000000" To="Normal" />
-                        <vsm:VisualTransition GeneratedDuration="00:00:00.3000000"/>
-                    </vsm:VisualStateGroup.Transitions>
-                    <vsm:VisualState x:Name="Normal" />
-                    <vsm:VisualState x:Name="MouseOver">
-                        <Storyboard>
-                            <ColorAnimationUsingKeyFrames BeginTime="00:00:00" Duration="00:00:00.0010000" Storyboard.TargetName="ellipse" 
-                                                          Storyboard.TargetProperty="(Shape.Fill).(SolidColorBrush.Color)">
-                                <SplineColorKeyFrame KeyTime="00:00:00" Value="#FF929191"/>
-                            </ColorAnimationUsingKeyFrames>
-                            <DoubleAnimationUsingKeyFrames BeginTime="00:00:00" Duration="00:00:00.0010000" Storyboard.TargetName="ellipse" 
-                                                           Storyboard.TargetProperty="(UIElement.Opacity)">
-                                <SplineDoubleKeyFrame KeyTime="00:00:00" Value="1"/>
-                            </DoubleAnimationUsingKeyFrames>
-                        </Storyboard>
-                    </vsm:VisualState>
-                </vsm:VisualStateGroup>
-            </vsm:VisualStateManager.VisualStateGroups>-->
-            <Ellipse  x:Name="ellipse" StrokeThickness="2" Stroke="{x:Null}" Fill="Gold" Opacity="0.0001"/>
+          <Ellipse  x:Name="ellipse" StrokeThickness="2" Stroke="{x:Null}" Fill="Gold" Opacity="0.0001"/>
             <ContentPresenter x:Name="contentPresenter" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" 
                               VerticalAlignment="{TemplateBinding VerticalContentAlignment}" 
                               HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" RenderTransformOrigin="0.5,0.5" 

@@ -42,6 +42,9 @@ namespace SIinformer.Logic
 
             _updater = new Updater(_setting, _logger);
             _updater.UpdaterComplete += UpdaterComplete;
+
+            
+
 #if !DEBUG
             //if (!_setting.UseGoogle) // если указано синхронизироваться с гуглом, не запускаем сразу обновление, чтобы синхронизации успела отработать и скачать возможные изменени
                 UpdateAuthors();
@@ -55,7 +58,11 @@ namespace SIinformer.Logic
 #else
             _updateTimer = new Timer { Interval = 60000, AutoReset = false};
 #endif
-            _updateTimer.Elapsed += (o, e) => UpdateAuthors();
+            _updateTimer.Elapsed += (o, e) =>
+                                        {
+                                            if (!IsBusy())
+                                                UpdateAuthors();
+                                        };
 
             _setting.PropertyChanged += (o, e) =>
             {
@@ -286,10 +293,12 @@ namespace SIinformer.Logic
             AuthorUpdates au = AuthorUpdates.FindWindow(author);
             if (au != null) au.Close();
             author.IsDeleted = true;// помечаем, что удален
+            Authors.Remove(author);
             if (MainWindow.GetSettings().UseDatabase)
                 MainWindow.MainForm.GetDatabaseManager().SaveAuthorThreaded(author); // сохраняем удаленный статус асинхронно
-
-            //Authors.Remove(author);
+            else
+                Save(true);
+            
             Refresh();// перерисовывем списко авторов
         }
 
@@ -349,11 +358,11 @@ namespace SIinformer.Logic
             Save(false);
         }
 
-        public static void Save(bool SaveAll)
+        public static void Save(bool SaveAll, Action saved=null)
         {
             if (MainWindow.GetSettings().UseDatabase)
             {
-                MainWindow.MainForm.GetDatabaseManager().Save(SaveAll);
+                MainWindow.MainForm.GetDatabaseManager().Save(SaveAll,saved);
             }
             else
             {
@@ -377,6 +386,7 @@ namespace SIinformer.Logic
                         }
                         Categories.Save(CategoriesFileName);
                     }
+                    if (saved != null) saved();
                 });
             }
         }
@@ -398,7 +408,7 @@ namespace SIinformer.Logic
                 Save();
                 _logger.Add("Производится проверка обновлений...");
 
-                var updatedAuthor = Authors.Where(author => !author.IsIgnored).ToList();
+                var updatedAuthor = Authors.Where(author => !author.IsIgnored && !author.IsDeleted).ToList();
                 try
                 {
                     if (_setting.AfterUpdater.Trim() != "")
@@ -429,11 +439,24 @@ namespace SIinformer.Logic
         {
             if (_updater.IsBusy)
             {
-                _logger.Add("Проверка обновлений останавливается...");
-                _updater.CancelAsync();
+                StopUpdating();
             }
             else
                 UpdateAuthors();
+        }
+
+        public static bool IsBusy()
+        {
+            return _updater.IsBusy;
+        }
+
+        public static void StopUpdating()
+        {
+            if (_updater.IsBusy)
+            {
+                _logger.Add("Проверка обновлений останавливается...");
+                _updater.CancelAsync();
+            }            
         }
 
         #region Перестройка представления данных
@@ -503,86 +526,91 @@ namespace SIinformer.Logic
         public static void Refresh()
         {
             if (_isListUpdates) return;
-
-            #region Создаем преставление данных из списка Authors, фильруем, сортируем
-
-            ListCollectionView authorCollectionView = new ListCollectionView(Authors.Where(a=>!a.IsDeleted).ToList());
-            authorCollectionView.Filter += CheckIncludeAuthorInCollection;
-            switch (_sortProperty)
+            try
             {
-                case "UpdateDate":
-                    authorCollectionView.SortDescriptions.Add(new SortDescription("Group", ListSortDirection.Ascending));
-                    authorCollectionView.SortDescriptions.Add(new SortDescription(_sortProperty, _sortDirection));
-                    break;
-                case "Name":
-                    authorCollectionView.SortDescriptions.Add(new SortDescription(_sortProperty, _sortDirection));
-                    break;
-            }
 
-            #endregion
+                #region Создаем преставление данных из списка Authors, фильруем, сортируем
 
-            #region Создаем из представления промежуточный список, который учитывает наличие категорий и их раскрытость
-
-            List<object> tempList = new List<object>();
-            if (UseCategory)
-            {
-                string[] categoryFromAuthors = Authors.GetCategoryNames();
-                // подергиваем все категории из Authors, чтоб они создались в Categories, если их еще не было
-                foreach (string categoryName in categoryFromAuthors)
+                ListCollectionView authorCollectionView = new ListCollectionView(Authors.Where(a => !a.IsDeleted).ToList());
+                authorCollectionView.Filter += CheckIncludeAuthorInCollection;
+                switch (_sortProperty)
                 {
-                    Categories.GetCategoryFromName(categoryName);
+                    case "UpdateDate":
+                        authorCollectionView.SortDescriptions.Add(new SortDescription("Group", ListSortDirection.Ascending));
+                        authorCollectionView.SortDescriptions.Add(new SortDescription(_sortProperty, _sortDirection));
+                        break;
+                    case "Name":
+                        authorCollectionView.SortDescriptions.Add(new SortDescription(_sortProperty, _sortDirection));
+                        break;
                 }
-                // заполняем промежуточный список
-                foreach (Category category in Categories)
+
+                #endregion
+
+                #region Создаем из представления промежуточный список, который учитывает наличие категорий и их раскрытость
+
+                List<object> tempList = new List<object>();
+                if (UseCategory)
                 {
-                    category.SetVisualNameAndIsNew(authorCollectionView);
-                    tempList.Add(category);
-                    if (category.Collapsed) continue;
-                    foreach (Author author in authorCollectionView)
+                    string[] categoryFromAuthors = Authors.GetCategoryNames();
+                    // подергиваем все категории из Authors, чтоб они создались в Categories, если их еще не было
+                    foreach (string categoryName in categoryFromAuthors)
                     {
-                        if (author.Category == category.Name)//&& !author.IsDeleted - сюда больше не попадают удаленные авторы, см. создание authorCollectionView в начале функции
-                            tempList.Add(author);
+                        Categories.GetCategoryFromName(categoryName);
+                    }
+                    // заполняем промежуточный список
+                    foreach (Category category in Categories)
+                    {
+                        category.SetVisualNameAndIsNew(authorCollectionView);
+                        tempList.Add(category);
+                        if (category.Collapsed) continue;
+                        foreach (Author author in authorCollectionView)
+                        {
+                            if (author.Category == category.Name)//&& !author.IsDeleted - сюда больше не попадают удаленные авторы, см. создание authorCollectionView в начале функции
+                                tempList.Add(author);
+                        }
                     }
                 }
-            }
-            else
-            {
-                foreach (var collectionItem in authorCollectionView)
-                {
-                    tempList.Add(collectionItem);
-                }
-            }
-
-            authorCollectionView.Filter -= CheckIncludeAuthorInCollection;
-
-            #endregion
-
-            #region Заполняем выходную коллекцию, стараясь по максимуму использовать имеющиеся элементы
-
-            // Просматриваем выходную коллекцию, удаляя элементы, отсутствующие во временном списке
-            for (int i = OutputCollection.Count - 1; i >= 0; i--)
-            {
-                if (!tempList.Contains(OutputCollection[i]))
-                {
-                    OutputCollection.RemoveAt(i);
-                }
-            }
-            // Просматриваем временную коллекцию, добавляя из нее в выходную те элементы, 
-            // которые отсутствуют в выходной коллекции. Одновременно выходная сортируется по временной
-            for (int i = 0; i < tempList.Count; i++)
-            {
-                object currentItem = tempList[i];
-                int outPos = OutputCollection.IndexOf(currentItem);
-                if (outPos == i) continue;
-                if (outPos >= 0)
-                    OutputCollection.Move(outPos, i);
                 else
-                    OutputCollection.Insert(i, currentItem);
+                {
+                    foreach (var collectionItem in authorCollectionView)
+                    {
+                        tempList.Add(collectionItem);
+                    }
+                }
+
+                authorCollectionView.Filter -= CheckIncludeAuthorInCollection;
+
+                #endregion
+
+                #region Заполняем выходную коллекцию, стараясь по максимуму использовать имеющиеся элементы
+
+                // Просматриваем выходную коллекцию, удаляя элементы, отсутствующие во временном списке
+                for (int i = OutputCollection.Count - 1; i >= 0; i--)
+                {
+                    if (!tempList.Contains(OutputCollection[i]))
+                    {
+                        OutputCollection.RemoveAt(i);
+                    }
+                }
+                // Просматриваем временную коллекцию, добавляя из нее в выходную те элементы, 
+                // которые отсутствуют в выходной коллекции. Одновременно выходная сортируется по временной
+                for (int i = 0; i < tempList.Count; i++)
+                {
+                    object currentItem = tempList[i];
+                    int outPos = OutputCollection.IndexOf(currentItem);
+                    if (outPos == i) continue;
+                    if (outPos >= 0)
+                        OutputCollection.Move(outPos, i);
+                    else
+                        OutputCollection.Insert(i, currentItem);
+                }
+
+                #endregion
+
+                OnInfoUpdaterRefresh();
             }
-
-            #endregion
-
-            OnInfoUpdaterRefresh();
+            catch 
+            {}
         }
 
         /// <summary>

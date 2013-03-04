@@ -144,7 +144,7 @@ namespace SIinformer.Utils
             sb.AppendLine("<channel>\r\n");
 
             sb.AppendLine("<title>Самиздат - избранное</title>");
-            sb.AppendLine("<link>http://zhurnal.lib.ru</link>");
+            sb.AppendLine("<link>http://samlib.ru</link>");
             sb.AppendLine("<description>Самиздат</description>");
             sb.AppendFormat("<lastBuildDate>{0}</lastBuildDate>", DateTime.Now.ToUniversalTime().ToString("R"));
             sb.AppendLine();

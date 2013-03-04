@@ -43,6 +43,9 @@ namespace SIinformer.Window
         private bool currentUseDatabase = false;
         private bool currentUseGoogle = false;
 
+        public static Action<Visibility> WindowVisibilityChanged = null;
+
+
         public static Setting GetSettings()
         {
             return _setting;
@@ -69,8 +72,7 @@ namespace SIinformer.Window
             SetBinding(HeightProperty, new Binding {Path = new PropertyPath("Height"), Mode = BindingMode.TwoWay});
             SetBinding(WidthProperty, new Binding {Path = new PropertyPath("Width"), Mode = BindingMode.TwoWay});
 
-            // запустить сервис обновления
-            UpdateService.GetInstance().StartUpdate();
+            VersionLabel.Content = "версия: " + App.Version;
         }
 
         #region Инициализация
@@ -128,7 +130,7 @@ namespace SIinformer.Window
                                                                 }
                                                             }
                                                             if (!summaryIsNew)
-                                                                _mNotifyIcon.Icon = Properties.Resources.books;
+                                                                _mNotifyIcon.Icon = Properties.Resources.favicon;
                                                         }
                                                     });
 
@@ -159,6 +161,10 @@ namespace SIinformer.Window
             SettingPropertyChanged(null, new PropertyChangedEventArgs("Init"));
 
             LoadedFlag = true;
+            //инициализируем обновлялку и передадим текущее состояние окна
+            ProgramUpdater.Instance.Init(Visibility, _logger);
+
+
         }
 
         /// <summary>
@@ -257,7 +263,7 @@ namespace SIinformer.Window
                         }
                         if (databaseManager != null)
                             databaseManager = null;
-                        InfoUpdater.Save();
+                        InfoUpdater.Save(true);
                     }
                     // перепривязываем данные
                     AuthorsListBox.ItemsSource = InfoUpdater.OutputCollection;
@@ -843,7 +849,7 @@ namespace SIinformer.Window
             {
                 try
                 {
-                    WEB.OpenURL("http://zhurnal.lib.ru/comment/p/pupkin_wasja_ibragimowich/siinformer");
+                    WEB.OpenURL("http://samlib.ru/comment/p/pupkin_wasja_ibragimowich/siinformer");
                 }
                 catch (Exception)
                 {
@@ -961,11 +967,12 @@ namespace SIinformer.Window
         private void Minimize_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             HideWindow();
+           
         }
 
         private void Maximize_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+            WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;            
         }
 
         private void Close_Executed(object sender, ExecutedRoutedEventArgs e)
@@ -1025,7 +1032,7 @@ namespace SIinformer.Window
                                    BalloonTipText = "Обновлений нет",
                                    BalloonTipTitle = "Информатор СИ",
                                    Text = "Информатор СИ",
-                                   Icon = Properties.Resources.books,
+                                   Icon = Properties.Resources.favicon,
                                    Visible = true
                                };
             _mNotifyIcon.Click += MNotifyIconClick;
@@ -1045,19 +1052,21 @@ namespace SIinformer.Window
             if (Visibility != Visibility.Visible) Visibility = Visibility.Visible;
             if (!IsActive) Activate();
             _trayMenu.MenuItems[0].Text = "Спрятать информатор СИ";
-            _mNotifyIcon.Icon = Properties.Resources.books;
+            _mNotifyIcon.Icon = Properties.Resources.favicon;
 
             AuthorsListBox.Focus();
             AuthorsListBox.ScrollIntoView(AuthorsListBox.SelectedValue);
             SetFocusToSelectedItem();
+            if (WindowVisibilityChanged != null) WindowVisibilityChanged(Visibility.Visible);
         }
 
         private void HideWindow()
         {
             Visibility = Visibility.Hidden;
-            _mNotifyIcon.Icon = Properties.Resources.books;
+            _mNotifyIcon.Icon = Properties.Resources.favicon;
             // гасит звезду в трее, если обновление произошло при открытом окне
             _trayMenu.MenuItems[0].Text = "Показать информатор СИ";
+            if (WindowVisibilityChanged != null) WindowVisibilityChanged(Visibility.Hidden);
         }
 
         private void TraymenuShowClick(object sender, EventArgs e)
@@ -1265,12 +1274,13 @@ namespace SIinformer.Window
 
         private void DarkWindow_SourceInitialized(object sender, EventArgs e)
         {
-            HwndSource hwndSource = (HwndSource) PresentationSource.FromVisual((DarkWindow) sender);
-            if (hwndSource != null) hwndSource.AddHook(DragHook);
+            //HwndSource hwndSource = (HwndSource) PresentationSource.FromVisual((DarkWindow) sender);
+            //if (hwndSource != null) hwndSource.AddHook(DragHook);
         }
 
         private static IntPtr DragHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handeled)
         {
+
             const int delta = 10;
             const int swpNoMove = 0x0002;
             const int windowPosChanging = 0x0046;

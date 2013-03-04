@@ -61,6 +61,7 @@
         <StackPanel HorizontalAlignment="Right" Grid.Row="2" Orientation="Horizontal" Margin="0,0,10,10"  >
             <Button Margin ="2,5,5,5" Height="20" MinWidth="80" IsCancel="True" Click="ButtonCancel_Click">Отмена</Button>
             <Button Margin ="2,5,5,5" Height="20" MinWidth="80" Click="ButtonOK_Click">Импортировать</Button>
+            <Button Margin ="2,5,5,5" Height="20" MinWidth="80" Click="ButtonExport_Click">Выгрузить список</Button>
         </StackPanel>
     </Grid>
   </Window:DarkWindow>

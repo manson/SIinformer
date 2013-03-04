@@ -222,7 +222,12 @@ namespace SIinformer.Readers
                         Replace("----------------------", "").
                         Replace("<Run Foreground=\"Black\">", "<Run>").
                         Replace("другие произведения.</Hyperlink>", "</Hyperlink>");
-                    File.WriteAllText(AuthorText.GetDiffFileName(_author) + ".xaml", _diffxml, Encoding.GetEncoding(1251));
+                    try
+                    {
+                        File.WriteAllText(AuthorText.GetDiffFileName(_author) + ".xaml", _diffxml, Encoding.GetEncoding(1251));
+                    }
+                    catch 
+                    {}
                 }
 
                 return _diffxml;
@@ -335,11 +340,17 @@ namespace SIinformer.Readers
                                             if (!string.IsNullOrEmpty(diff_file))
                                             {
                                                 diff_file = diff_file.Replace("<head>", "<head><STYLE type=\"text/css\">table {border:1px solid #d9d9d9;} td {border:1px solid #d9d9d9; padding:3px;} ins {background-color: #00542E;text-decoration:inherit;} del {color: #999;	background-color:#FEC8C8;} ins.mod { background-color: #FFE1AC; }</STYLE>");
-                                                File.WriteAllText(
-                                                    Path.Combine(Path.GetDirectoryName(GetCachedFileName()), CachedFileName + "_diff.shtml"),
-                                                    diff_file, Encoding.GetEncoding(1251));
-                                                AuthorText.UpdateHasDiff(_author);
 
+                                                try
+                                                {
+                                                    File.WriteAllText(
+                                                Path.Combine(Path.GetDirectoryName(GetCachedFileName()), CachedFileName + "_diff.shtml"),
+                                                diff_file, Encoding.GetEncoding(1251));
+                                                    AuthorText.UpdateHasDiff(_author);
+
+                                                }
+                                                catch 
+                                                {}
                                             }
                                             Logger.Add(string.Format("Файл различий в обновлении книги '{0}' сформирован.", AuthorText.Name));
 
@@ -358,8 +369,16 @@ namespace SIinformer.Readers
                     #endregion
 
 
-                    File.WriteAllText(GetCachedFileName(), Text, Encoding.GetEncoding(1251));
-                    Logger.Add(string.Format("Книга '{0}' закачана.", AuthorText.Name));
+                            try
+                            {
+                                File.WriteAllText(GetCachedFileName(), Text, Encoding.GetEncoding(1251));
+                                Logger.Add(string.Format("Книга '{0}' закачана.", AuthorText.Name));
+
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Add(string.Format("Книга '{0}' НЕ закачана. Ошибка: {1}", AuthorText.Name, ex));
+                            }
                 }
             }
             if (DownloadTextComplete != null) DownloadTextComplete(this, e);

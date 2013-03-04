@@ -1,5 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <RemoteFile path="SIinformer.exe" url="http://188.127.242.68/SIInformer/SIinformer.exe" lastver="1.0.0.8" size="637952" needRestart="true" description="Проверка обновления. Первая тестовая версия..."/>
-  <RemoteFile path="Db4objects.Db4o.dll" url="http://188.127.242.68/SIInformer/Db4objects.Db4o.dll" lastver="8.0.160.14822" size="758784" needRestart="true" description="Проверка обновления. Меняем dll"/>
-</Config>

@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Xml;
 using System.Xml.Serialization;
 
 namespace SIinformer.Logic
@@ -71,6 +72,14 @@ namespace SIinformer.Logic
                     var sr = new XmlSerializer(typeof(AuthorList));
                     result = (AuthorList)sr.Deserialize(st);
                 }
+
+                while (result.Any(x => x.IsDeleted))                
+                    result.Remove(result.FirstOrDefault(x => x.IsDeleted));
+                
+                //var r = XmlReader.Create(mstream,new XmlReaderSettings { CheckCharacters = false,  });
+
+                //var sr = new XmlSerializer(typeof(AuthorList));
+                //result = (AuthorList)sr.Deserialize(r);
                 isCorrect = true;
             }
             catch
@@ -115,6 +124,11 @@ namespace SIinformer.Logic
                     return;
                 }
             }
+
+            while (this.Any(x => x.IsDeleted))            
+                this.Remove(this.FirstOrDefault(x => x.IsDeleted));
+            
+
             // сериализует в память
             var mstream = new MemoryStream();
             using (var st = new StreamWriter(mstream))
@@ -122,6 +136,9 @@ namespace SIinformer.Logic
                 var sr = new XmlSerializer(typeof(AuthorList));
                 sr.Serialize(st, this);
             }
+            //var w = XmlWriter.Create(mstream,new XmlWriterSettings { CheckCharacters = false });
+            //var sr = new XmlSerializer(typeof(AuthorList));
+            //sr.Serialize(w, this);
             // пишет в файл из памяти
             File.WriteAllBytes(authorsFileName, mstream.GetBuffer());
             _isDefault = false;

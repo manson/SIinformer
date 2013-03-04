@@ -15,6 +15,8 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Threading;
 using SIinformer.Logic;
+using System.Linq;
+
 
 namespace SIinformer.Window
 {
@@ -50,7 +52,7 @@ namespace SIinformer.Window
       //| RegexOptions.Compiled
       //);
         
-
+        List<string> urls=new List<string>();
         public ImportWindow()
         {
             InitializeComponent();
@@ -112,6 +114,7 @@ namespace SIinformer.Window
         private void ButtonRead_Click(object sender, RoutedEventArgs e)
         {
             listURLs.Items.Clear();
+            urls.Clear();
             if (lblFile.Text.Trim()=="" || !File.Exists(lblFile.Text.Trim())) return;
             lblStatus.Text = "Чтение файла и анализ...";
             Application.Current.Dispatcher.Invoke(DispatcherPriority.Background, new ThreadStart(delegate { }));
@@ -139,6 +142,7 @@ namespace SIinformer.Window
                     url = url.Substring(0, url.IndexOf("indexdate.shtml"));
 
                 listURLs.Items.Add(url);
+                urls.Add(url);
             }
             lblStatus.Text = "Анализ окончен.";
         }
@@ -148,6 +152,31 @@ namespace SIinformer.Window
         {
             if (listURLs.Items.Count==0 || listURLs.SelectedIndex==-1) return;
             listURLs.Items.Remove(listURLs.SelectedItem);
+        }
+
+        private void ButtonExport_Click(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+            dlg.Title = "";
+            dlg.FileName = "authors_export"; // Default file name
+            dlg.DefaultExt = "txt"; // Default file extension
+            dlg.Filter = ""; // Filter files by extension
+            Nullable<bool> result = dlg.ShowDialog();
+            // Process open file dialog box results
+            if (result == true)
+            {
+                var file = dlg.FileName;
+                try
+                {
+                    File.WriteAllLines(file, urls);
+                    MessageBox.Show("Экспорт выполнен", "Сообщение");
+
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Ошибка экспорта: " + ex.Message, "Ошибка");
+                }
+            }
         }
 
     }
