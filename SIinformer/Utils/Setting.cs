@@ -62,6 +62,7 @@ namespace SIinformer.Utils
             BookConverter = "";
             BookConverterParam = "";
             MaxCacheSize = 50;
+            LastAuthorUrl = string.Empty;
         }
 
         public bool CloseHowToMinimize { get; set; }
