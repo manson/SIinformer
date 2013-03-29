@@ -164,11 +164,16 @@
             </Grid.ColumnDefinitions>
             <!-- ListBox с авторами -->
             <ListBox x:Name="AuthorsListBox" Grid.Column="0" Grid.ColumnSpan="2" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="6,0,6,0" 
-                 KeyUp="AuthorsListBox_KeyUp" KeyDown="AuthorsListBox_KeyDown" MouseDoubleClick="AuthorsListBox_MouseDoubleClick"
+                 KeyUp="AuthorsListBox_KeyUp" KeyDown="AuthorsListBox_KeyDown" 
                  IsTabStop="True" TabIndex="2" ItemTemplateSelector="{StaticResource ListBoxDataTemplateSelector}" SelectionChanged="AuthorsListBox_SelectionChanged"
                  ScrollViewer.ScrollChanged="AuthorsListBox_ScrollChanged" 
                  AllowDrop="True" DragOver="AuthorsListBox_DragOver" Drop="AuthorsListBox_Drop"
                       ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+              <ListBox.ItemContainerStyle>
+                <Style TargetType="{x:Type ListBoxItem}">
+                  <EventSetter Event="MouseDoubleClick" Handler="AuthorsListBox_MouseDoubleClick" />
+                </Style>
+              </ListBox.ItemContainerStyle>
             </ListBox>
             <Grid x:Name="AuthorPanelPlacement" Grid.Column="1" Grid.Row="1"></Grid>
             <!--<Local:AuthorPanel Grid.Column="1" Grid.Row="1" x:Name="AuthorPanel"/>-->
