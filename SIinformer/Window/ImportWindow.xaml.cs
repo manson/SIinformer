@@ -140,6 +140,8 @@ namespace SIinformer.Window
                     url = url.Substring(0, url.IndexOf("&"));
                 if (url.Contains("indexdate.shtml"))
                     url = url.Substring(0, url.IndexOf("indexdate.shtml"));
+                if (url.Contains("indextitle.shtml"))
+                    url = url.Substring(0, url.IndexOf("indextitle.shtml"));
 
                 listURLs.Items.Add(url);
                 urls.Add(url);

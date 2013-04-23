@@ -62,6 +62,7 @@ namespace SIinformer.Utils
             BookConverter = "";
             BookConverterParam = "";
             MaxCacheSize = 50;
+            LastAuthorUrl = string.Empty;
             AdvancedWindowVisibleStyle = AdvancedWindowVisibleStyle.AlwaysPanel;
         }
 
@@ -141,6 +142,21 @@ namespace SIinformer.Utils
                 }
             }
         }
+        /// <summary>
+        /// При проверке обновлений проверять ли описание книги (аннотацию) на изменение?
+        /// </summary>
+        public bool SkipBookDescription
+        {
+            get { return _skipBookDescription; }
+            set {
+                if (_skipBookDescription != value)
+                {
+                    _skipBookDescription = value;
+                    RaisePropertyChanged("SkipBookDescription");
+                }
+            }
+        }
+
 
         private long _intervalOfUpdate = 1;
 
@@ -786,6 +802,7 @@ namespace SIinformer.Utils
         private double _width;
         private double _height;
         private string _lastAuthorUrl="";
+        private bool _skipBookDescription;
 
         public string AfterUpdater
         {
@@ -880,9 +897,10 @@ namespace SIinformer.Utils
             Cached = original.Cached;
             IntervalOfUpdate = original.IntervalOfUpdate;
             UseDatabase = original.UseDatabase;
-            UseGoogle = original.UseGoogle;
-            GoogleLogin = original.GoogleLogin;
-            GooglePassword = original.GooglePassword;
+            //UseGoogle = original.UseGoogle;
+            //GoogleLogin = original.GoogleLogin;
+            //GooglePassword = original.GooglePassword;
+            SkipBookDescription = original.SkipBookDescription;
         }
 
         public static string ErrorLogFileName()

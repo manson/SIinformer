@@ -95,6 +95,7 @@
                             <Button Click="ButtonReadLinksFromExternalFile_Click" Padding="5,2,5,2" Margin="5,0">Загрузить ссылки из внешнего файла</Button>
                         </StackPanel>
                         <Button Click="DoDefragmentAndBackupDB_Click" Padding="5,2,5,2" Margin="5,0">При запуске программы выполнить дефрагментацию и бекап БД</Button>
+                        <CheckBox Margin="3,0,0,0" IsChecked="{Binding Path=SkipBookDescription, Mode=TwoWay}">При проверке обновлений не учитывать изменения в аннотации (описании) книги</CheckBox>
                     </StackPanel>
                 </Expander>
                 <!--<Expander Header="Синхронизация с Google" IsExpanded="False" Padding="5">

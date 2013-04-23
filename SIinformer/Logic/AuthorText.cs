@@ -86,6 +86,8 @@ namespace SIinformer.Logic
             string url = author.URL;
             if (url.EndsWith("indexdate.shtml"))
                 url = url.Replace("indexdate.shtml", Link);
+            else if (url.EndsWith("indextitle.shtml"))
+                url = url.Replace("indextitle.shtml", Link);
             else
                 url = (url.EndsWith("/")) ? url + Link : url + "/" + Link;
             return url;
@@ -101,6 +103,8 @@ namespace SIinformer.Logic
             string urlWithoutHTTP = author.URL.Replace(@"http://", "");
             if (urlWithoutHTTP.EndsWith("/indexdate.shtml"))
                 urlWithoutHTTP = urlWithoutHTTP.Replace("/indexdate.shtml", "");
+            if (urlWithoutHTTP.EndsWith("/indextitle.shtml"))
+                urlWithoutHTTP = urlWithoutHTTP.Replace("/indextitle.shtml", "");
 
             string endPath = urlWithoutHTTP.Substring(urlWithoutHTTP.IndexOf("/") + 1).Replace("/", @"\");
 

@@ -11,7 +11,7 @@ namespace SIinformer.Logic
     public class Updater
     {
         private readonly Logger _logger;
-        private readonly Setting _setting;
+        private Setting _setting;
         private readonly SynchronizationContext _syncContext;
         private readonly BackgroundWorker _worker;
         private string _baloonInfo;
@@ -30,6 +30,7 @@ namespace SIinformer.Logic
             _worker.RunWorkerCompleted += WorkerRunWorkerCompleted;
         }
 
+       
         public bool IsBusy
         {
             get { return _worker.IsBusy; }
@@ -68,7 +69,7 @@ namespace SIinformer.Logic
 
         private void WorkerDoWork(object sender, DoWorkEventArgs e)
         {
-            List<Author> list = (List<Author>) e.Argument;
+            var list = (List<Author>) e.Argument;
 
             int index = 1;
             int authorsCnt = list.Count;
@@ -171,8 +172,8 @@ namespace SIinformer.Logic
                 }
             }
 
-            List<Author> cachedAuthors = new List<Author>();
-            List<AuthorText> cachedAuthorTexts = new List<AuthorText>();
+            var cachedAuthors = new List<Author>();
+            var cachedAuthorTexts = new List<AuthorText>();
             foreach (Author author in list)
             {
                 foreach (AuthorText authorText in author.Texts)
@@ -210,7 +211,7 @@ namespace SIinformer.Logic
                                     ToMessage = true,
                                     IsError = false
                                 });
-                    CachedParam cachedParam = new CachedParam
+                    var cachedParam = new CachedParam
                                                   {Author = cachedAuthors[i], AuthorText = cachedAuthorTexts[i]};
                     SyncRun(Action.CachedAdd, cachedParam);
                     cachedParam.DownloadTextItem.DownloadTextComplete += ItemDownloadTextComplete;
@@ -254,8 +255,8 @@ namespace SIinformer.Logic
             {
                 case Action.UpdateAuthorText:
                     {
-                        UpdateTextParam updateTextParam = (UpdateTextParam) body;
-                        updateTextParam.IsNew = updateTextParam.Author.UpdateAuthorInfo(updateTextParam.Page, _syncContext);
+                        var updateTextParam = (UpdateTextParam) body;
+                        updateTextParam.IsNew = updateTextParam.Author.UpdateAuthorInfo(updateTextParam.Page, _syncContext, _setting.SkipBookDescription);
                         _syncContext.Post(SyncRun, new RunContent(action, updateTextParam));
                     }
                     break;
@@ -275,7 +276,7 @@ namespace SIinformer.Logic
             switch (action)
             {
                 case Action.SetStatus:
-                    SetStatusParam param = (SetStatusParam) body;
+                    var param = (SetStatusParam) body;
                     _logger.Add(param.Message, param.ToMessage, param.IsError);
                     break;
                 case Action.IsUpdaterTrue:
@@ -285,7 +286,7 @@ namespace SIinformer.Logic
                     ((Author) body).IsUpdated = false;
                     break;
                 case Action.UpdateAuthorText:
-                    UpdateTextParam updateTextParam = (UpdateTextParam) body;
+                    var updateTextParam = (UpdateTextParam) body;
                     if (updateTextParam.IsNew)
                     {
                         _logger.Add(string.Format("{1}/{2}: '{0}' обновлен", updateTextParam.Author.Name,
@@ -295,7 +296,7 @@ namespace SIinformer.Logic
                     }
                     break;
                 case Action.CachedAdd:
-                    CachedParam cachedParamAdd = (CachedParam) body;
+                    var cachedParamAdd = (CachedParam) body;
                     DownloadTextItem item = DownloadTextHelper.Add(cachedParamAdd.Author, cachedParamAdd.AuthorText);
                     if (item.Text == null)
                     {
@@ -304,7 +305,7 @@ namespace SIinformer.Logic
                     cachedParamAdd.DownloadTextItem = item;
                     break;
                 case Action.CachedRemove:
-                    CachedParam cachedParamRemove = (CachedParam) body;
+                    var cachedParamRemove = (CachedParam) body;
                     cachedParamRemove.DownloadTextItem.Stop();
                     break;
                 default:

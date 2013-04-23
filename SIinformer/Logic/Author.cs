@@ -360,8 +360,8 @@ namespace SIinformer.Logic
         public string GetAuthorPage()
         {
             string url = URL;
-            if (!url.EndsWith("indexdate.shtml"))
-                url = (url.EndsWith("/")) ? URL + "indexdate.shtml" : URL + "/indexdate.shtml";
+            if (!url.EndsWith("indexdate.shtml") && !url.EndsWith("indextitle.shtml"))
+                url = (url.EndsWith("/")) ? URL + "indextitle.shtml" : URL + "/indextitle.shtml";
 
             return WEB.DownloadPageSilent(url);
         }
@@ -372,7 +372,7 @@ namespace SIinformer.Logic
         /// <param name="page">Страница автора со списком произведений</param>
         /// <param name="context">Контекст синхронизации для обновления GUI</param>
         /// <returns>true - автор обновился</returns>
-        public bool UpdateAuthorInfo(string page, SynchronizationContext context)
+        public bool UpdateAuthorInfo(string page, SynchronizationContext context, bool skipBookDescriptionChecking=false)
         {
             lock (_lockObj)
             {
@@ -413,17 +413,24 @@ namespace SIinformer.Logic
                             if (txt.Link == t.Link)
                             {
                                 txt.Cached = t.Cached;
-                                OldSize = t.Size;// запоминаем старый размер, чтобы запомнить его в новом тексте
-                            }
-                            if (txt.Description == t.Description
-                                && txt.Name == t.Name
-                                && txt.Size == t.Size)
-                            {
-                                bFound = true;
-                                // переносим значение isNew в новый массив, чтобы не потерять непрочитанные новые тексты
-                                txt.IsNew = t.IsNew;
-                                txt.UpdateDate = t.UpdateDate;                                
-                                break;
+                                if (t.IsNew)
+                                    // если книгу не читали до этой проверки, не меняем старое значение, чтобы видеть кумулятивное изменение размера
+                                    OldSize = t.SizeOld;// запоминаем позапрошлый размер, чтобы запомнить изменения в новом тексте кумулятивно
+                                else
+                                    OldSize = t.Size; // запоминаем старый размер, чтобы запомнить его в новом тексте
+
+
+                                bFound = skipBookDescriptionChecking
+                                             ? txt.Name == t.Name && txt.Size == t.Size
+                                             : txt.Name == t.Name && txt.Size == t.Size & txt.Description == t.Description;
+                                if (bFound)
+                                {
+                                    // переносим значение isNew в новый массив, чтобы не потерять непрочитанные новые тексты
+                                    txt.IsNew = t.IsNew;
+                                    txt.UpdateDate = t.UpdateDate;
+                                    txt.SizeOld = t.SizeOld; // переносим, чтобы при отсутствии изменений не скидывалась информация об изменениях
+                                    break;
+                                }
                             }
                         }
                         if (!bFound)

@@ -45,16 +45,10 @@ namespace SIinformer.Logic
 
             
 
-#if !DEBUG
-            //if (!_setting.UseGoogle) // если указано синхронизироваться с гуглом, не запускаем сразу обновление, чтобы синхронизации успела отработать и скачать возможные изменени
-                UpdateAuthors();
-#endif
-
-#if !DEBUG
-           // if (!_setting.UseGoogle)
+#if !DEBUG           
+                UpdateAuthors();           
                 _updateTimer = new Timer {Interval = 3600000, AutoReset = false};
-            //else // если используем гугл, то запускаем проверку обновления через 10 минут
-           //     _updateTimer = new Timer {Interval = 60000 * 10, AutoReset = false};
+            
 #else
             _updateTimer = new Timer { Interval = 60000, AutoReset = false};
 #endif
@@ -71,48 +65,14 @@ namespace SIinformer.Logic
                     UpdateIntervalAndStart();
                     _logger.Add("Периодичность обновления: " + IntervalOfUpdateConverter.Parse(_setting.IntervalOfUpdate));
                 }
-                //else if (e.PropertyName=="UseGoogle")
-                {
-                    //if (_setting.UseGoogle)
-                    //    StartGoogleSync();
-                    //else
-                    //    StopGoogleSync();                                            
-                }
             };
 
             TimerBasedAuthorsSaver.StartMonitoring(false);
-            // если указано синхронизироваться с Google
-            //if (_setting.UseGoogle)
-            //{                
-            //    StartGoogleSync();
-            //    _updateTimer.Start(); // ручками толкаем таймер, так как мы пропустили этап обновлений, где он запускается
-            //}
+          
         }
-        //public static void StartGoogleSync()
-        //{
-        //    if (TimerBasedAuthorsSaver.GetInstance().GoogleSyncActive()) return;
-        //    if (string.IsNullOrEmpty(_setting.GoogleLogin) || string.IsNullOrEmpty(_setting.GooglePassword))
-        //    {
-        //        _logger.Add("Запуск синхронизации с Google невозможен, так как не указан логин или пароль", true, true);
-        //        return;
-        //    }
-        //    _logger.Add("Запуск синхронизации с Google...", true);
-        //    TimerBasedAuthorsSaver.GetInstance().StartGoogleSync();
-        //    _logger.Add("Cинхронизация с Google запущена.", true);
-        //}
 
-        //public static void StopGoogleSync()
-        //{
-        //    if (!TimerBasedAuthorsSaver.GetInstance().GoogleSyncActive()) return;
-        //    _logger.Add("Останавливается синхронизация с Google...", true);
-        //    TimerBasedAuthorsSaver.GetInstance().StopGoogleSync();
-        //    _logger.Add("Cинхронизация с Google остановлена.", true);
-        //}
+       
 
-        /// <summary>
-        /// Очистим стутус, показывающий, что данные изменились. 
-        /// После загрузки из БД и xml они показывают true (так как не хранятся там)
-        /// </summary>
         private static void ClearAuthorsChengedStatus()
         {
             foreach (Author author in Authors)
@@ -197,10 +157,13 @@ namespace SIinformer.Logic
             
             // Если URL заканчивается на index.shtml, преобразовать его в нужный)
             if (url.EndsWith("index.shtml"))
-                url = url.Replace("index.shtml", "indexdate.shtml");
+                url = url.Replace("index.shtml", "indextitle.shtml");
 
-            if (!url.EndsWith("indexdate.shtml"))
-                url = (url.EndsWith("/")) ? url + "indexdate.shtml" : url + "/indexdate.shtml";
+            if (url.EndsWith("indexvote.shtml"))
+                url = url.Replace("indexvote.shtml", "indextitle.shtml");
+
+            if (!url.EndsWith("indextitle.shtml"))
+                url = (url.EndsWith("/")) ? url + "indextitle.shtml" : url + "/indextitle.shtml";
 
             Author author = Authors.FindAuthor(url);
             if (author != null)
@@ -248,34 +211,7 @@ namespace SIinformer.Logic
             return author;
         }
 
-        // обновить данные автора из скачанного с гугла
-        public static void UpdateAuthorContent(Author author)
-        {
-            foreach (Author _author in Authors)
-            {
-                if (author.Id == _author.Id)
-                {                    
-                    //_author.Cached = author.Cached;
-                    //_author.Category = author.Category;
-                    //_author.Comment = author.Comment;
-                    //_author.IsIgnored = author.IsIgnored;                    
-                    //_author.Name = author.Name;                    
-                    //_author.Texts = new BindingList<AuthorText>();
-                    //foreach (AuthorText authorText in author.Texts)
-                    //    _author.Texts.Add(authorText);
-                    //_author.IsNew = author.IsNew;
-                    //_author.timeStamp = GoogleTime;
-                    //_author.UpdateDate = author.UpdateDate;
-                    //_author.Changed = true;// говорим, что данные изменились (для хаписи в БД)
-                    //_author.ChangedGoogle = false;// говорим, что синхронизировать с гуглом не надо            
-                    Authors.Remove(_author);
-                    Authors.Add(author);
-                    break;
-                }
-            }
-            
-        }
-
+       
         private static DateTime GetUpdateDate(string page)
         {
             Match match = Regex.Match(page, @"Обновлялось:</font></a></b>\s*(.*?)\s*$", RegexOptions.Multiline);

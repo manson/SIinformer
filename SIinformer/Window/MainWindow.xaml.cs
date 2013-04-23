@@ -404,7 +404,8 @@ namespace SIinformer.Window
                 string url = author.URL;
                 if ((!_setting.OpenAuthorPageSortingDate)&&(url.EndsWith("indexdate.shtml")))
                     url = url.Replace("indexdate.shtml", "");
-
+                if ((!_setting.OpenAuthorPageSortingDate) && (url.EndsWith("indextitle.shtml")))
+                    url = url.Replace("indextitle.shtml", "");
                 WEB.OpenURL(url);
 
                 if (_setting.MarkAuthorIsReadWithAuthorPage)
@@ -624,10 +625,15 @@ namespace SIinformer.Window
                 {
                     if (text.IsNew)
                     {
+                        var authorUrl = author.URL.Contains("indexdate.shtml")
+                                            ? author.URL.Replace("indexdate.shtml", text.Link)
+                                            : author.URL.Contains("indextitle.shtml")
+                                                  ? author.URL.Replace("indextitle.shtml", text.Link)
+                                                  : author.URL;
                         result = result +
                                  string.Format("{0}{1}.{0}{2}-{3}{0}{4} ({5}){0}{6}{0}{7}{0}", Environment.NewLine, i,
                                                text.Genres, text.SectionName, text.Name, text.Size,
-                                               author.URL.Replace("indexdate.shtml", text.Link), text.Description);
+                                               authorUrl, text.Description);
                         i++;
                     }
                 }
