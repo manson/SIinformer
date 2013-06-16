@@ -62,17 +62,21 @@ namespace SIinformer.Logic
             try
             {
                 // перегоняем файл в память (быстро)
-                FileStream fstream = new FileStream(authorsFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                byte[] buffer = new byte[fstream.Length];
-                fstream.Read(buffer, 0, (int)fstream.Length);
-                MemoryStream mstream = new MemoryStream(buffer);
-                // десериализируем (медленно)
-                using (var st = new StreamReader(mstream))
+                using (var fstream = new FileStream(authorsFileName, FileMode.Open, FileAccess.Read,
+                                                        FileShare.ReadWrite))
                 {
-                    var sr = new XmlSerializer(typeof(AuthorList));
-                    result = (AuthorList)sr.Deserialize(st);
+                    byte[] buffer = new byte[fstream.Length];
+                    fstream.Read(buffer, 0, (int) fstream.Length);
+                    using (var mstream = new MemoryStream(buffer))
+                    {
+                        // десериализируем (медленно)
+                        using (var st = new StreamReader(mstream))
+                        {
+                            var sr = new XmlSerializer(typeof (AuthorList));
+                            result = (AuthorList) sr.Deserialize(st);
+                        }
+                    }
                 }
-
                 while (result.Any(x => x.IsDeleted))                
                     result.Remove(result.FirstOrDefault(x => x.IsDeleted));
                 
@@ -130,17 +134,28 @@ namespace SIinformer.Logic
             
 
             // сериализует в память
-            var mstream = new MemoryStream();
-            using (var st = new StreamWriter(mstream))
+            try
             {
-                var sr = new XmlSerializer(typeof(AuthorList));
-                sr.Serialize(st, this);
+                using (var mstream = new MemoryStream())
+                {
+                    using (var st = new StreamWriter(mstream))
+                    {
+                        var sr = new XmlSerializer(typeof(AuthorList));
+                        sr.Serialize(st, this);
+                        // пишет в файл из памяти
+                        using (var file = new FileStream(authorsFileName, FileMode.Create, FileAccess.Write))
+                        {
+                            mstream.WriteTo(file);
+                            file.Close();
+                        }
+                        st.Close();
+                    }
+                }
             }
-            //var w = XmlWriter.Create(mstream,new XmlWriterSettings { CheckCharacters = false });
-            //var sr = new XmlSerializer(typeof(AuthorList));
-            //sr.Serialize(w, this);
-            // пишет в файл из памяти
-            File.WriteAllBytes(authorsFileName, mstream.GetBuffer());
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка записи базы данных в файл.\r\n" + ex.ToString(),"Ошибка");
+            }
             _isDefault = false;
         }
 

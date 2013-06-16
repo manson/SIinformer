@@ -45,6 +45,7 @@ namespace SIinformer.Logic
 
         public void RunWorkerAsync(List<Author> updatedAuthor)
         {
+            //new ElasticScheduler(_logger, _setting).MakePlan(updatedAuthor);
             _baloonInfo = "";
             if (!ManualUpdater)
                 _logger.Working = true;
@@ -69,6 +70,8 @@ namespace SIinformer.Logic
 
         private void WorkerDoWork(object sender, DoWorkEventArgs e)
         {
+
+            var elasticScheduler = new ElasticScheduler(_logger, _setting);
             var list = (List<Author>) e.Argument;
 
             int index = 1;
@@ -95,14 +98,23 @@ namespace SIinformer.Logic
                     string page = author.GetAuthorPage();
                     if (page != null)
                     {
+                        author.DaysInaccessible = 0;// скидываем накопительный счетчик дней недоступности, так как страничка доступна стала.
                         SyncRun(Action.UpdateAuthorText, new UpdateTextParam(author, page, index, list.Count));
+
                     }
                     else
                     {
+                        // проанализируем недоступность во времени
+                        var dayDate = new DateTime(author.LastCheckDate.Year, author.LastCheckDate.Month,
+                                                   author.LastCheckDate.Day);
+                        if (dayDate < DateTime.Today) // если последний раз проверял не сегодня и сегодня недоступен, увеличиваем маркер недоступности. То есть если сегодня уже был недоступен, то этот факт игнорируем. Таким образом мы раз в сутки учитываем недоступность                        
+                            author.DaysInaccessible = author.DaysInaccessible+1; // увеличиваем счетчик недоступности дней, там автор сам уйдет в игнор, если счетчик превысит константу _maxDaysInaccessibility
+                            
+                        
                         SyncRun(Action.SetStatus,
                                 new SetStatusParam
                                     {
-                                        Message = string.Format("Недоступна страница '{0}'", author.Name),
+                                        Message = string.Format("Недоступна страница '{0}'. {1}", author.Name, author.IsIgnored ? "Автор отключен от проверок из-за превышения кол-ва дней недоступности." : ""),
                                         ToMessage = true,
                                         IsError = true
                                     });
@@ -136,6 +148,26 @@ namespace SIinformer.Logic
                 }
 
                 SyncRun(Action.IsUpdaterFalse, author);
+                
+                // пропишем дату последней проверки автора. Необходимо для рассчета следующего времени проверки
+                author.LastCheckDate = DateTime.Now;
+                // перерасчитаем следующее время проверки автора               
+                try
+                {
+                    elasticScheduler.MakePlan(author);
+                }
+                catch (Exception ex)
+                {
+                    SyncRun(Action.SetStatus,
+                              new SetStatusParam
+                              {
+                                  Message =
+                                      string.Format("Ошибка формирования плана проверок автора {0} - {1}",
+                                                    author.Name, ex),
+                                  ToMessage = true,
+                                  IsError = true
+                              });
+                }
 
                 index++;
                 // задержка, если проверка больше одного автора
@@ -148,8 +180,8 @@ namespace SIinformer.Logic
                         waitSpan = App.BalanceInterval;
                     else
                     {
-                        waitSpan = waitSpan < 10 ? rnd.Next(10, 30) : waitSpan;
-                        waitSpan = waitSpan > 30 ? 30 : waitSpan;
+                        waitSpan = waitSpan < 10 ? rnd.Next(10, 15) : waitSpan;
+                        waitSpan = waitSpan > 15 ? 15 : waitSpan;
                     }
                     while (waitSpan > 0)
                     {
@@ -171,7 +203,22 @@ namespace SIinformer.Logic
                     }
                 }
             }
-
+            // вызываем метод сохранения статистики. Однако внутри него он ориентируется на настройку "Сохранять статистику"
+            try
+            {
+                elasticScheduler.SaveStatistics();
+            }
+            catch (Exception ex)
+            {
+                SyncRun(Action.SetStatus,
+                        new SetStatusParam
+                            {
+                                Message =
+                                    string.Format("Ошибка сохранение статистики. {0}", ex),
+                                ToMessage = true,
+                                IsError = true
+                            });
+            }
             var cachedAuthors = new List<Author>();
             var cachedAuthorTexts = new List<AuthorText>();
             foreach (Author author in list)

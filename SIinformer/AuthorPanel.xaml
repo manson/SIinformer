@@ -4,7 +4,7 @@
     xmlns:si="clr-namespace:SIinformer">
 
     <UserControl.Resources>
-
+        <si:SizeVisibilityConverter x:Key="SizeVisibilityConverter"/>
      
         
         <DataTemplate x:Key="ListItemsTemplate_AuthorText">
@@ -31,9 +31,9 @@
                             Content="R" FontFamily="Monotype Corsiva" FontSize="10" Width="16" Height="16" Visibility="Collapsed" Margin="1,0,3,0">
                         </Button>
                         <TextBlock Text="{Binding Path=Name}" FontSize="14" VerticalAlignment="Bottom" TextWrapping="Wrap" />
-                        <TextBlock Text="   Размер: " FontSize="10" VerticalAlignment="Bottom"  TextWrapping="Wrap" />
-                        <TextBlock Text="{Binding Path=SizeVisual}" FontSize="10" VerticalAlignment="Bottom" TextWrapping="Wrap" />
-                        <TextBlock Text=" Кб" FontSize="10" VerticalAlignment="Bottom" TextWrapping="Wrap" />
+                        <TextBlock Text="   Размер: " FontSize="10" VerticalAlignment="Bottom"  TextWrapping="Wrap"  Visibility="{Binding Size, Converter={StaticResource SizeVisibilityConverter}}"/>
+                        <TextBlock Text="{Binding Path=SizeVisual}" FontSize="10" VerticalAlignment="Bottom" TextWrapping="Wrap" Visibility="{Binding Size, Converter={StaticResource SizeVisibilityConverter}}"/>
+                        <TextBlock Text=" Кб" FontSize="10" VerticalAlignment="Bottom" TextWrapping="Wrap" Visibility="{Binding Size, Converter={StaticResource SizeVisibilityConverter}}"/>
                         <TextBlock Text="   Обновлен: " FontSize="10" VerticalAlignment="Bottom"  TextWrapping="Wrap" />
                         <TextBlock Text="{Binding Path=UpdateDateVisual}" FontSize="10" VerticalAlignment="Bottom" TextWrapping="Wrap" />
                     </WrapPanel>
@@ -91,7 +91,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <ListBox x:Name="authorTextsListBox" Grid.Row="0" MouseDoubleClick="ListMouseDoubleClick" Padding="5,2,5,2"
                  IsTabStop="True" ItemTemplateSelector="{StaticResource AuthorListBoxDataTemplateSelector}" 

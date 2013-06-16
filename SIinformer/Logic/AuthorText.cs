@@ -63,6 +63,7 @@ namespace SIinformer.Logic
         public string SizeVisual { 
             get
             {
+                if (Size == -1) return "";
                 if (!IsNew || SizeOld==0) return Size.ToString();
                 // если новый размер больше, то есть текста добавилось, показываем на сколько
                 if (Size > SizeOld) return SizeOld.ToString() + "+" + (Size - SizeOld).ToString() + "=" + Size.ToString();
@@ -84,13 +85,9 @@ namespace SIinformer.Logic
         public string GetFullLink(Author author)
         {
             string url = author.URL;
-            if (url.EndsWith("indexdate.shtml"))
-                url = url.Replace("indexdate.shtml", Link);
-            else if (url.EndsWith("indextitle.shtml"))
-                url = url.Replace("indextitle.shtml", Link);
-            else
-                url = (url.EndsWith("/")) ? url + Link : url + "/" + Link;
-            return url;
+            var site = Sites.SitesDetector.GetSite(url);
+
+            return site.PrepareTextUrlBeforeOpenning(url, Link);
         }
 
         /// <summary>
@@ -100,26 +97,28 @@ namespace SIinformer.Logic
         /// <returns>Путь на диске</returns>
         public string GetCachedFileName(Author author)
         {
-            string urlWithoutHTTP = author.URL.Replace(@"http://", "");
-            if (urlWithoutHTTP.EndsWith("/indexdate.shtml"))
-                urlWithoutHTTP = urlWithoutHTTP.Replace("/indexdate.shtml", "");
-            if (urlWithoutHTTP.EndsWith("/indextitle.shtml"))
-                urlWithoutHTTP = urlWithoutHTTP.Replace("/indextitle.shtml", "");
-
-            string endPath = urlWithoutHTTP.Substring(urlWithoutHTTP.IndexOf("/") + 1).Replace("/", @"\");
-
-            string booksCachedPath = DownloadTextHelper.BooksPath();
-            booksCachedPath = Path.Combine(booksCachedPath, endPath);
-            string sectionName = SectionName;
-            foreach (char c in Path.GetInvalidFileNameChars())
+            try
             {
-                sectionName = sectionName.Replace(c, '_');
+                var site = Sites.SitesDetector.GetSite(author.URL);
+                string booksCachedPath = DownloadTextHelper.BooksPath();
+
+
+
+                booksCachedPath = Path.Combine(booksCachedPath, site.GetUserBooksFolder(author, this));
+
+                string fileName = Path.Combine(booksCachedPath, site.GetFileName(this));
+                string ext = site.GetFileExtention(this); //Path.GetExtension(fileName);
+
+
+                fileName = fileName.EndsWith(ext)
+                               ? fileName.Substring(0, fileName.LastIndexOf(ext)) + "." + UpdateDate.Ticks + ext
+                               : fileName + "." + UpdateDate.Ticks + ext;
+                return fileName;
             }
-            booksCachedPath = Path.Combine(booksCachedPath, sectionName);
-            string fileName = Path.Combine(booksCachedPath, Link);
-            string ext = Path.GetExtension(fileName);
-            fileName = fileName.Substring(0, fileName.LastIndexOf(ext)) + "." + UpdateDate.Ticks + ext;
-            return fileName;
+            catch
+            {
+                return "default";
+            }
         }
 
         /// <summary>

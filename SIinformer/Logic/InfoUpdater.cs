@@ -46,8 +46,8 @@ namespace SIinformer.Logic
             
 
 #if !DEBUG           
-                UpdateAuthors();           
-                _updateTimer = new Timer {Interval = 3600000, AutoReset = false};
+                UpdateAuthors();
+                _updateTimer = new Timer { Interval = 300000, AutoReset = false }; // 3600000
             
 #else
             _updateTimer = new Timer { Interval = 60000, AutoReset = false};
@@ -77,7 +77,7 @@ namespace SIinformer.Logic
         {
             foreach (Author author in Authors)
             {
-                author.Changed = author.ChangedGoogle = false;
+                author.Changed  = false;
             }
         }
 
@@ -154,16 +154,10 @@ namespace SIinformer.Logic
 
             if (!url.StartsWith("http://")) url = "http://" + url;
 
-            
+            Sites.ISite site = Sites.SitesDetector.GetSite(url);
+
             // Если URL заканчивается на index.shtml, преобразовать его в нужный)
-            if (url.EndsWith("index.shtml"))
-                url = url.Replace("index.shtml", "indextitle.shtml");
-
-            if (url.EndsWith("indexvote.shtml"))
-                url = url.Replace("indexvote.shtml", "indextitle.shtml");
-
-            if (!url.EndsWith("indextitle.shtml"))
-                url = (url.EndsWith("/")) ? url + "indextitle.shtml" : url + "/indextitle.shtml";
+            url = site.PrepareAuthorUrlOnAdding(url);
 
             Author author = Authors.FindAuthor(url);
             if (author != null)
@@ -181,9 +175,13 @@ namespace SIinformer.Logic
                     return null;
                 }
 
-                int index = pageContent.IndexOf('.', pageContent.IndexOf("<title>")) + 1;
-                string authorName = pageContent.Substring(index, pageContent.IndexOf('.', index) - index);
-                DateTime updateDate = GetUpdateDate(pageContent);
+                
+                string authorName = "";
+                DateTime updateDate = DateTime.MinValue;
+                site.GetAuthorCredentials(pageContent, out authorName, out updateDate);
+                //int index = pageContent.IndexOf('.', pageContent.IndexOf("<title>")) + 1;
+                //string authorName = pageContent.Substring(index, pageContent.IndexOf('.', index) - index);
+                //DateTime updateDate = GetUpdateDate(pageContent);
 
                 if (updateDate == DateTime.MinValue)
                 {
@@ -196,6 +194,8 @@ namespace SIinformer.Logic
                     return null;
                 }
                 author = new Author {Name = authorName, IsNew = false, UpdateDate = updateDate, URL = url};
+
+
                 author.CheckID();// генерим id
                 Authors.Add(author);
                 author.UpdateAuthorInfo(pageContent, SynchronizationContext.Current);
@@ -332,19 +332,19 @@ namespace SIinformer.Logic
             if (_setting.IntervalOfUpdate == 0) _updateTimer.Stop();
             else
             {
-                _updateTimer.Interval = _setting.IntervalOfUpdate*3600000;
+                _updateTimer.Interval = _setting.IntervalOfUpdate *  300000;// так как у нас теперь персональное расписание для авторов, то ставим 5 минут. Было - 3600000;
                 _updateTimer.Start();
             }
         }
 
-        private static void UpdateAuthors()
+        private static void UpdateAuthors(bool manualProcessing=false)
         {
             if (!_updater.IsBusy)
             {
                 Save();
                 _logger.Add("Производится проверка обновлений...");
-
-                var updatedAuthor = Authors.Where(author => !author.IsIgnored && !author.IsDeleted).ToList();
+                // выбираем авторов, время проверки которых подошло или, если запущен ручной режим проверки - всех авторов
+                var updatedAuthor = Authors.Where(author => !author.IsIgnored && !author.IsDeleted && (manualProcessing ? true : author.NextCheckDate<DateTime.Now)).ToList();
                 try
                 {
                     if (_setting.AfterUpdater.Trim() != "")
@@ -378,7 +378,7 @@ namespace SIinformer.Logic
                 StopUpdating();
             }
             else
-                UpdateAuthors();
+                UpdateAuthors(true);
         }
 
         public static bool IsBusy()

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -381,6 +382,12 @@ namespace SIinformer
         private void OpenReader(AuthorText authorText, int? readerType)
         {
             if (readerType == null) readerType = MainWindow.GetSettings().DefaultReader;
+            readerType = readerType ?? 0;
+
+            var site = Logic.Sites.SitesDetector.GetSite(_author.URL);
+            if (site != null)
+                readerType = site.GetSupportedReaderNumber((int)readerType);
+            
             string url = authorText.GetFullLink(_author);
             switch (readerType)
             {
@@ -554,13 +561,15 @@ namespace SIinformer
             {
                 if (sender.Text != null)
                 {
-                    SaveFileDialog dialog = new SaveFileDialog
+                    var site = Logic.Sites.SitesDetector.GetSite(sender.GetAuthor().URL);
+
+                    var dialog = new SaveFileDialog
                                                 {
                                                     AddExtension = true,
                                                     Filter = "HTML-файлы|*.html|Все файлы|*.*",
                                                     ValidateNames = true,
                                                     OverwritePrompt = true,
-                                                    FileName = sender.AuthorText.Link
+                                                    FileName = site !=null ? site.GetFileName(sender.AuthorText) : sender.AuthorText.Link
                                                 };
                     if (dialog.ShowDialog() == true)
                     {
@@ -763,6 +772,31 @@ namespace SIinformer
                              ? string.Format("{0} ({1})", Name, counter)
                              : string.Format("{0} ({1}/{2})", Name, counter, counterIsNew);
             IsNew = counterIsNew != 0;
+        }
+
+        #endregion
+    }
+
+
+    public class SizeVisibilityConverter : IValueConverter
+    {
+        #region IValueConverter Members
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+
+            var size = (int) value;
+            return size == -1 ? Visibility.Collapsed : Visibility.Visible;
+            //var authorText = (AuthorText) value;
+            //if (authorText == null) return Visibility.Visible;
+
+            //return authorText.Size==-1 ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
         }
 
         #endregion

@@ -3,43 +3,102 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
+using SIinformer.Window;
 
 namespace SIinformer.Logic
 {
     public class CategoryList : BindingList<Category>
     {
+        public bool IsDirty { get; set; }
+
+        public CategoryList()
+        {
+            this.ListChanged += (s, e) => IsDirty = true;
+            this.AddingNew += (s, e) => IsDirty = true;
+        }
+
         public static CategoryList Load(string categoryFileName)
         {
             CategoryList result;
+            if (!File.Exists(categoryFileName))
+                result = LoadDefaultCategories();
+            else
             try
             {
-                using (var st = new StreamReader(categoryFileName))
+                // перегоняем файл в память (быстро)
+                using (var fstream = new FileStream(categoryFileName, FileMode.Open, FileAccess.Read,
+                                                           FileShare.ReadWrite))
                 {
-                    var sr = new XmlSerializer(typeof (CategoryList));
-                    result = (CategoryList) sr.Deserialize(st);
+                    byte[] buffer = new byte[fstream.Length];
+                    fstream.Read(buffer, 0, (int) fstream.Length);
+                    using (var mstream = new MemoryStream(buffer))
+                    {
+                        // десериализируем (медленно)
+                        using (var st = new StreamReader(mstream))
+                        {
+                            var sr = new XmlSerializer(typeof (CategoryList));
+                            result = (CategoryList) sr.Deserialize(st);
+                        }
+                    }
+                    fstream.Close();
                 }
                 foreach (Category category in result)
                 {
                     category.SetOwner(result);
                 }
                 result.Reorder();
+                result.IsDirty = false;
             }
             catch (Exception)
             {
-                result = new CategoryList();
-                Category category = new Category {Name = "Default", Index = 0};
-                category.SetOwner(result);
-                result.Add(category);
+                result = LoadDefaultCategories();                
             }
+
             return result;
         }
 
+        static CategoryList LoadDefaultCategories()
+        {
+            var result =new CategoryList();
+            var category = new Category { Name = "Default", Index = 0 };
+            category.SetOwner(result);
+            result.Add(category);
+            result.IsDirty = true;
+            return result;
+        }
+
+        
+
         public void Save(string categoryFileName)
         {
-            using (var st = new StreamWriter(categoryFileName))
+            if (!IsDirty) return;
+            try
             {
-                var sr = new XmlSerializer(typeof (CategoryList));
-                sr.Serialize(st, this);
+                using (var mstream = new MemoryStream())
+                {
+                    using (var st = new StreamWriter(mstream))
+                    {
+                        var sr = new XmlSerializer(typeof (CategoryList));
+                        sr.Serialize(st, this);
+                        using (var file = new FileStream(categoryFileName, FileMode.Create, FileAccess.ReadWrite))
+                        {
+                            mstream.WriteTo(file);
+                            file.Close();
+                        }
+                        st.Close();
+                    }
+                }
+                IsDirty = false;
+            }
+            catch (Exception ex)
+            {
+                if (MainWindow.MainForm != null)
+                {
+                    var logger = MainWindow.MainForm.GetLogger();
+                    if (logger != null)
+                        MainWindow.MainForm.GetLogger()
+                                  .Add("Ошибка записи категорий в файл: " + ex.Message, false, true);
+                }
             }
         }
 
@@ -63,6 +122,7 @@ namespace SIinformer.Logic
                 .SetOwner(this);
             Add(result);
             Reorder();
+            IsDirty = true;
             return result;
         }
 

@@ -51,7 +51,7 @@ namespace SIinformer.Utils
                                                                            // если есть авторы с изменившимися данными, записываем их
                                                                            if ((from a in InfoUpdater.Authors
                                                                                 where a.Changed
-                                                                                select a).Count() > 0)
+                                                                                select a).Any())
                                                                            {
                                                                                InfoUpdater.Save(false);
                                                                            }

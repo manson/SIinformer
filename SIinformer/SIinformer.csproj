@@ -75,6 +75,7 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Remoting" />
     <Reference Include="System.Security" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
@@ -192,8 +193,14 @@
       <DependentUpon>ToolBar.xaml</DependentUpon>
     </Compile>
     <Compile Include="Logic\Author.cs" />
+    <Compile Include="Logic\ElasticScheduler.cs" />
     <Compile Include="Logic\ProgramUpdater.cs" />
+    <Compile Include="Logic\Sites\FanFiction.cs" />
+    <Compile Include="Logic\Sites\ISite.cs" />
+    <Compile Include="Logic\Sites\Samlib.cs" />
+    <Compile Include="Logic\Sites\SitesDetector.cs" />
     <Compile Include="Logic\TextCleaner.cs" />
+    <Compile Include="Logic\Transport\TransportBookInfo.cs" />
     <Compile Include="Logic\Updater.cs" />
     <Compile Include="Readers\DownloadTextHelper.cs" />
     <Compile Include="Readers\HTMLConverter\HtmlCssParser.cs" />

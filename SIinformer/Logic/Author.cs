@@ -25,6 +25,7 @@ namespace SIinformer.Logic
     {
         #region Private Fields
 
+        private int _maxDaysInaccessibility = 10; // через столько дней отключать пользователя от проверок, если он все это время недоступен
         private string _category = "Default";
         private bool _isIgnored;
         private bool _isNew;
@@ -50,44 +51,23 @@ namespace SIinformer.Logic
             set
             {
                 _Changed = value;
-                // а случае, если выставляется метка, что данные изменились - изменяем инфу и для гугл-синхронизации, иначе нет.
-                if (_Changed)
-                    ChangedGoogle = true;
             } }
 
-        [XmlIgnore]
-        public bool ChangedGoogle { get; set; }
-
-        
-
-
         /// <summary>
-        /// Данные, которые храняться внутри файла ссылки на Гугле
+        /// время последней проверки
         /// </summary>
-        [XmlIgnore]
-        public string GoogleContent
-        {
-            get
-            {
-                //System.Text.StringBuilder sb = new StringBuilder();                
-                //sb.AppendLine(URL);
-                //sb.AppendLine(Name);
-                //return sb.ToString();                
-                var xs = new XmlSerializer(typeof(Author));
-                var sb = new StringBuilder();
-                var w = new StringWriter(sb, CultureInfo.InvariantCulture);
-                xs.Serialize(w, this,
-                             new XmlSerializerNamespaces(new[] { new XmlQualifiedName(string.Empty) }));
-                return sb.ToString();
+        public DateTime LastCheckDate { get; set; }
+        /// <summary>
+        /// время следующей проверки
+        /// </summary>
+        public DateTime NextCheckDate { get; set; }
 
-            }
-        }
-
+     
         public Author()
         {
             _texts = new BindingList<AuthorText>();
             _texts.ListChanged += TextsListChanged;
-            Cached = null;
+            Cached = null; 
         }
 
         /// <summary>
@@ -111,13 +91,30 @@ namespace SIinformer.Logic
         {
             if (string.IsNullOrEmpty(Id))
             {
-                Id = URL.ToLower().Replace("http://", "").Replace("indexdate.shtml", "").Replace("/", "_").Replace(".", "_").Replace("\\", "_").Trim();
+                Id = URL.ToLower().Replace("http://", "").Replace("indexdate.shtml", "").Replace("indextitle.shtml", "").Replace("/", "_").Replace(".", "_").Replace("\\", "_").Trim();
                 if (Id.EndsWith("_")) Id = Id.Substring(0, Id.Length - 1);
             }
         }
 
         // время-штамп изменения любых значений любых полей. Нужно для синхронизации с интернет-хранилищем 
         public DateTime? timeStamp { get; set; }
+
+        // кол-во дней недоступности автора. Нужно для того, чтобы при длительной недоступности отключать проверку автора. Должно сбрасываться, если страничка вдруг стала доступной
+        public int DaysInaccessible
+        {
+            get { return _daysInaccessible; }
+            set
+            {
+                if (_daysInaccessible != value)
+                {
+                    _daysInaccessible = value;
+                    if (_daysInaccessible > _maxDaysInaccessibility) // если недоступность автора свыше константы дней, то отключаем его от проверок
+                        IsIgnored = true;
+                    Changed = true;
+                }
+            }
+        }
+
 
         public BindingList<AuthorText> Texts
         {
@@ -209,6 +206,9 @@ namespace SIinformer.Logic
         /// удален. нужно для синхронизациию при загрузке из бд не показывается, не грузится
         /// </summary>
         bool _IsDeleted = false;
+
+        private int _daysInaccessible;
+
         public bool IsDeleted
         {
             get { return _IsDeleted; }
@@ -257,7 +257,12 @@ namespace SIinformer.Logic
         /// <summary>
         /// Адрес автора
         /// </summary>
-        public string URL { get; set; }
+        public string URL { get; set; }  
+        
+        /// <summary>
+        /// Фльтернативный адрес автора
+        /// </summary>
+        public string AlternateURL { get; set; }
 
         /// <summary>
         /// Дата/время обновления
@@ -330,40 +335,19 @@ namespace SIinformer.Logic
 
         #region Обновление автора
 
-        ///// <summary>
-        ///// Обновляет информацию о произведениях автора.
-        ///// Адрес берется из поля author.URL.
-        ///// </summary>
-        ///// <exception <exception cref="System.Exception">Когда страница не загружена</exception>
-        ///// <returns>true-есть новые произведения, false-нет</returns>
-        //public bool UpdateAuthor()
-        //{
-        //    bool retValue;
-        //    if (!URL.EndsWith("indexdate.shtml"))
-        //        URL = (URL.EndsWith("/"))
-        //                  ? URL + "indexdate.shtml"
-        //                  : URL + "/indexdate.shtml";
-
-        //    byte[] buffer = WEB.DownloadPageSilent(URL);
-        //    if (buffer != null)
-        //    {
-        //        retValue = UpdateAuthorInfo(WEB.ConvertPage(buffer));
-        //    }
-        //    else
-        //    {
-        //        throw new Exception(string.Format("Недоступна страница '{0}'", Name));
-        //    }
-
-        //    return retValue;
-        //}
+        
 
         public string GetAuthorPage()
         {
-            string url = URL;
-            if (!url.EndsWith("indexdate.shtml") && !url.EndsWith("indextitle.shtml"))
-                url = (url.EndsWith("/")) ? URL + "indextitle.shtml" : URL + "/indextitle.shtml";
+            Sites.ISite _site = null;
+            _site = Sites.SitesDetector.GetSite(URL);
+            if (_site == null) return "";
+            return _site.GetAuthorPage(URL);
+            //string url = URL;
+            //if (!url.EndsWith("indexdate.shtml") && !url.EndsWith("indextitle.shtml"))
+            //    url = (url.EndsWith("/")) ? URL + "indextitle.shtml" : URL + "/indextitle.shtml";
 
-            return WEB.DownloadPageSilent(url);
+            //return WEB.DownloadPageSilent(url);
         }
 
         /// <summary>
@@ -374,91 +358,95 @@ namespace SIinformer.Logic
         /// <returns>true - автор обновился</returns>
         public bool UpdateAuthorInfo(string page, SynchronizationContext context, bool skipBookDescriptionChecking=false)
         {
-            lock (_lockObj)
-            {
-                bool retValue = false;
-                Author authorTemp = new Author { UpdateDate = UpdateDate };
+            Sites.ISite _site = null;
+            _site = Sites.SitesDetector.GetSite(URL);
+            if (_site == null) return false;
+            return _site.UpdateAuthorInfo(page, this, context, skipBookDescriptionChecking);
+            //lock (_lockObj)
+            //{
+            //    bool retValue = false;
+            //    Author authorTemp = new Author { UpdateDate = UpdateDate };
 
-                // проанализируем данные на страничке. если раньше их не загружали, то в любом случае не показываем, что есть обновления, просто заполняем данные
-                MatchCollection matches = Regex.Matches(page,
-                                                        "<DL><DT><li>(?:<font.*?>.*?</font>)?\\s*(<b>(?<Authors>.*?)\\s*</b>\\s*)?<A HREF=(?<LinkToText>.*?)><b>\\s*(?<NameOfText>.*?)\\s*</b></A>.*?<b>(?<SizeOfText>\\d+)k</b>.*?<small>(?:Оценка:<b>(?<DescriptionOfRating>(?<rating>\\d+(?:\\.\\d+)?).*?)</b>.*?)?\\s*\"(?<Section>.*?)\"\\s*(?<Genres>.*?)?\\s*(?:<A HREF=\"(?<LinkToComments>.*?)\">Комментарии:\\s*(?<CommentsDescription>(?<CommentCount>\\d+).*?)</A>\\s*)?</small>.*?(?:<br><DD>(?<Description>.*?))?</DL>");
-                if (matches.Count > 0)
-                {
-                    int cnt = 0;
-                    foreach (Match m in matches)
-                    {
-                        var item = new AuthorText
-                                       {
-                                           Description = NormalizeHTML(m.Groups["Description"].Value).Trim(),
-                                           Genres = NormalizeHTML(m.Groups["Genres"].Value),
-                                           Link = m.Groups["LinkToText"].Value,
-                                           Name = NormalizeHTML(m.Groups["NameOfText"].Value),
-                                           Order = cnt,
-                                           SectionName =
-                                               NormalizeHTML(m.Groups["Section"].Value).Replace("@", ""),
-                                           Size = int.Parse(m.Groups["SizeOfText"].Value)
-                                       };
-                        authorTemp.Texts.Add(item);
-                        cnt++;
-                    }
-                }
-                if (Texts.Count > 0) // если раньше загружали автора, то проводим сравнение
-                {
-                    foreach (AuthorText txt in authorTemp.Texts)
-                    {
-                        bool bFound = false;
-                        int OldSize = 0; // стрый размер текста
-                        foreach (AuthorText t in Texts)
-                        {
-                            if (txt.Link == t.Link)
-                            {
-                                txt.Cached = t.Cached;
-                                if (t.IsNew)
-                                    // если книгу не читали до этой проверки, не меняем старое значение, чтобы видеть кумулятивное изменение размера
-                                    OldSize = t.SizeOld;// запоминаем позапрошлый размер, чтобы запомнить изменения в новом тексте кумулятивно
-                                else
-                                    OldSize = t.Size; // запоминаем старый размер, чтобы запомнить его в новом тексте
+            //    // проанализируем данные на страничке. если раньше их не загружали, то в любом случае не показываем, что есть обновления, просто заполняем данные
+            //    MatchCollection matches = Regex.Matches(page,
+            //                                            "<DL><DT><li>(?:<font.*?>.*?</font>)?\\s*(<b>(?<Authors>.*?)\\s*</b>\\s*)?<A HREF=(?<LinkToText>.*?)><b>\\s*(?<NameOfText>.*?)\\s*</b></A>.*?<b>(?<SizeOfText>\\d+)k</b>.*?<small>(?:Оценка:<b>(?<DescriptionOfRating>(?<rating>\\d+(?:\\.\\d+)?).*?)</b>.*?)?\\s*\"(?<Section>.*?)\"\\s*(?<Genres>.*?)?\\s*(?:<A HREF=\"(?<LinkToComments>.*?)\">Комментарии:\\s*(?<CommentsDescription>(?<CommentCount>\\d+).*?)</A>\\s*)?</small>.*?(?:<br><DD>(?<Description>.*?))?</DL>");
+            //    if (matches.Count > 0)
+            //    {
+            //        int cnt = 0;
+            //        foreach (Match m in matches)
+            //        {
+            //            var item = new AuthorText
+            //                           {
+            //                               Description = NormalizeHTML(m.Groups["Description"].Value).Trim(),
+            //                               Genres = NormalizeHTML(m.Groups["Genres"].Value),
+            //                               Link = m.Groups["LinkToText"].Value,
+            //                               Name = NormalizeHTML(m.Groups["NameOfText"].Value),
+            //                               Order = cnt,
+            //                               SectionName =
+            //                                   NormalizeHTML(m.Groups["Section"].Value).Replace("@", ""),
+            //                               Size = int.Parse(m.Groups["SizeOfText"].Value)
+            //                           };
+            //            authorTemp.Texts.Add(item);
+            //            cnt++;
+            //        }
+            //    }
+            //    if (Texts.Count > 0) // если раньше загружали автора, то проводим сравнение
+            //    {
+            //        foreach (AuthorText txt in authorTemp.Texts)
+            //        {
+            //            bool bFound = false;
+            //            int OldSize = 0; // стрый размер текста
+            //            foreach (AuthorText t in Texts)
+            //            {
+            //                if (txt.Link == t.Link)
+            //                {
+            //                    txt.Cached = t.Cached;
+            //                    if (t.IsNew)
+            //                        // если книгу не читали до этой проверки, не меняем старое значение, чтобы видеть кумулятивное изменение размера
+            //                        OldSize = t.SizeOld;// запоминаем позапрошлый размер, чтобы запомнить изменения в новом тексте кумулятивно
+            //                    else
+            //                        OldSize = t.Size; // запоминаем старый размер, чтобы запомнить его в новом тексте
 
 
-                                bFound = skipBookDescriptionChecking
-                                             ? txt.Name == t.Name && txt.Size == t.Size
-                                             : txt.Name == t.Name && txt.Size == t.Size & txt.Description == t.Description;
-                                if (bFound)
-                                {
-                                    // переносим значение isNew в новый массив, чтобы не потерять непрочитанные новые тексты
-                                    txt.IsNew = t.IsNew;
-                                    txt.UpdateDate = t.UpdateDate;
-                                    txt.SizeOld = t.SizeOld; // переносим, чтобы при отсутствии изменений не скидывалась информация об изменениях
-                                    break;
-                                }
-                            }
-                        }
-                        if (!bFound)
-                        {
-                            retValue = true;
-                            authorTemp.IsNew = true;
-                            txt.IsNew = true;
-                            txt.UpdateDate = DateTime.Now;
-                            txt.SizeOld = OldSize;
-                            // да, автор обновился 
-                            authorTemp.UpdateDate = DateTime.Now;
-                        }
-                    }
-                    // доп проверка по количеству произведений
-                    if (authorTemp.Texts.Count != Texts.Count)
-                    {
-                        retValue = true;
-                        authorTemp.UpdateDate = DateTime.Now;
-                    }
-                }
+            //                    bFound = skipBookDescriptionChecking
+            //                                 ? txt.Name == t.Name && txt.Size == t.Size
+            //                                 : txt.Name == t.Name && txt.Size == t.Size & txt.Description == t.Description;
+            //                    if (bFound)
+            //                    {
+            //                        // переносим значение isNew в новый массив, чтобы не потерять непрочитанные новые тексты
+            //                        txt.IsNew = t.IsNew;
+            //                        txt.UpdateDate = t.UpdateDate;
+            //                        txt.SizeOld = t.SizeOld; // переносим, чтобы при отсутствии изменений не скидывалась информация об изменениях
+            //                        break;
+            //                    }
+            //                }
+            //            }
+            //            if (!bFound)
+            //            {
+            //                retValue = true;
+            //                authorTemp.IsNew = true;
+            //                txt.IsNew = true;
+            //                txt.UpdateDate = DateTime.Now;
+            //                txt.SizeOld = OldSize;
+            //                // да, автор обновился 
+            //                authorTemp.UpdateDate = DateTime.Now;
+            //            }
+            //        }
+            //        // доп проверка по количеству произведений
+            //        if (authorTemp.Texts.Count != Texts.Count)
+            //        {
+            //            retValue = true;
+            //            authorTemp.UpdateDate = DateTime.Now;
+            //        }
+            //    }
 
-                context.Post(SyncRun, new RunContent {Renewed = this, New = authorTemp});
+            //    context.Post(SyncRun, new RunContent {Renewed = this, New = authorTemp});
 
-                return retValue; 
-            } // lock
+            //    return retValue; 
+            //} // lock
         }
 
-        private static void SyncRun(object state)
+        public static void SyncRun(object state)
         {
             Author renewed = ((RunContent) state).Renewed;
             Author @new = ((RunContent)state).New;

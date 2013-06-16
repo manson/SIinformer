@@ -12,6 +12,7 @@ using System.Windows.Input;
 using System.Xml;
 using System.Xml.Serialization;
 using SIinformer.Logic;
+using SIinformer.Window;
 
 namespace SIinformer.Utils
 {
@@ -72,50 +73,22 @@ namespace SIinformer.Utils
         /// Урл, где смотреть обновления
         /// </summary>
         public string ProgramUpdatesUrl { get; set; }
-
         /// <summary>
-        /// Использовать синхронизацию с гуглом
+        /// сохранять статистику эластичного планировщика проверок
         /// </summary>
-        private bool _UseGoogle = false;
-        public bool UseGoogle
+        public bool SaveStatisticsOfElasticScheduler
         {
-            get
-            { return _UseGoogle; }
+            get { return _saveStatisticsOfElasticScheduler; }
             set
             {
-                _UseGoogle = value;
-                RaisePropertyChanged("UseGoogle");
-            }
-        }
-        /// <summary>
-        /// Имя пользователя на гугловском аккаунте
-        /// </summary>
-        private string _GoogleLogin ;
-        public string GoogleLogin
-        {
-            get
-            { return _GoogleLogin; }
-            set
-            {
-                _GoogleLogin = value;
-                RaisePropertyChanged("GoogleLogin");
+                if (_saveStatisticsOfElasticScheduler != value)
+                {
+                    _saveStatisticsOfElasticScheduler = value;
+                    RaisePropertyChanged("SaveStatisticsOfElasticScheduler");
+                }
             }
         }
 
-        /// <summary>
-        /// Пароль пользователя на гугловском аккаунте
-        /// </summary>
-        private string _GooglePassword;
-        public string GooglePassword
-        {
-            get
-            { return _GooglePassword; }
-            set
-            {
-                _GooglePassword = value;
-                RaisePropertyChanged("GooglePassword");
-            }
-        }
 
         // использовать базу данных для хранения данных
         private bool _UseDatabase = false;
@@ -626,12 +599,25 @@ namespace SIinformer.Utils
 
         public void SaveToXML()
         {
-            var xs = new XmlSerializer(typeof(Setting));
-            var sb = new StringBuilder();
-            var w = new StringWriter(sb, CultureInfo.InvariantCulture);
-            xs.Serialize(w, this,
-                         new XmlSerializerNamespaces(new[] { new XmlQualifiedName(string.Empty) }));
-            File.WriteAllText(SettingFileName, sb.ToString());
+            try
+            {
+                var xs = new XmlSerializer(typeof(Setting));
+                var sb = new StringBuilder();
+                var w = new StringWriter(sb, CultureInfo.InvariantCulture);
+                xs.Serialize(w, this,
+                             new XmlSerializerNamespaces(new[] { new XmlQualifiedName(string.Empty) }));
+                File.WriteAllText(SettingFileName, sb.ToString());
+            }
+            catch (Exception ex)
+            {
+                if (MainWindow.MainForm != null)
+                {
+                    var logger = MainWindow.MainForm.GetLogger();
+                    if (logger != null)
+                        MainWindow.MainForm.GetLogger()
+                                  .Add("Ошибка записи настроек в файл: " + ex.Message, false, true);
+                }
+            }
         }
         /// <summary>
         /// Очистка размеров и положений окон авторов от удаленных авторов
@@ -803,6 +789,7 @@ namespace SIinformer.Utils
         private double _height;
         private string _lastAuthorUrl="";
         private bool _skipBookDescription;
+        private bool _saveStatisticsOfElasticScheduler;
 
         public string AfterUpdater
         {
@@ -901,6 +888,7 @@ namespace SIinformer.Utils
             //GoogleLogin = original.GoogleLogin;
             //GooglePassword = original.GooglePassword;
             SkipBookDescription = original.SkipBookDescription;
+            SaveStatisticsOfElasticScheduler = original.SaveStatisticsOfElasticScheduler;
         }
 
         public static string ErrorLogFileName()

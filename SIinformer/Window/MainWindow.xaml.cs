@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -73,6 +76,23 @@ namespace SIinformer.Window
             SetBinding(WidthProperty, new Binding {Path = new PropertyPath("Width"), Mode = BindingMode.TwoWay});
 
             VersionLabel.Content = "версия: " + App.Version;
+
+            TaskScheduler.UnobservedTaskException += (object sender, UnobservedTaskExceptionEventArgs e) =>
+            {
+                string error = e.Exception.InnerException != null
+                                 ? string.Format(
+                                       "Источник ошибки:{0}  {1}.{0}Причина ошибки:{0}  {2}.{0}Стек:{0}{3}{0}InnerException:{0}{4}",
+                                       Environment.NewLine,
+                                       e.Exception.Source, e.Exception.Message, e.Exception.StackTrace,
+                                       e.Exception.InnerException.StackTrace)
+                                 : string.Format(
+                                       "Источник ошибки:{0}  {1}.{0}Причина ошибки:{0}  {2}.{0}Стек:{0}{3}{0}",
+                                       Environment.NewLine,
+                                       e.Exception.Source, e.Exception.Message, e.Exception.StackTrace);
+                File.AppendAllText(Setting.ErrorLogFileName(), error, Encoding.GetEncoding(1251));
+                _logger.Add(error,false,true);
+                e.SetObserved();
+            };
         }
 
         #region Инициализация
@@ -401,11 +421,9 @@ namespace SIinformer.Window
             if (author == null) return;
             try
             {
-                string url = author.URL;
-                if ((!_setting.OpenAuthorPageSortingDate)&&(url.EndsWith("indexdate.shtml")))
-                    url = url.Replace("indexdate.shtml", "");
-                if ((!_setting.OpenAuthorPageSortingDate) && (url.EndsWith("indextitle.shtml")))
-                    url = url.Replace("indextitle.shtml", "");
+                string url = string.IsNullOrWhiteSpace(author.AlternateURL) ? author.URL : author.AlternateURL;
+                var site = Logic.Sites.SitesDetector.GetSite(url);
+                url = site.PrepareAuthorUrlBeforeOppening(url, _setting);              
                 WEB.OpenURL(url);
 
                 if (_setting.MarkAuthorIsReadWithAuthorPage)
@@ -526,6 +544,7 @@ namespace SIinformer.Window
                 if (InfoUpdater.Categories[i].Name == category.Name)
                 {
                     InfoUpdater.Categories.RemoveAt(i);
+                    InfoUpdater.Categories.IsDirty = true;
                     break;
                 }
             }
@@ -746,8 +765,11 @@ namespace SIinformer.Window
             RenameWindow rw = new RenameWindow();
             if (rw.ShowDialog() == true)
             {
-                if (rw.ResultNewName.Trim() == "") return;                
-                author.Category = rw.ResultNewName;
+                if (rw.ResultNewName.Trim() == "") return;     
+                var categoryName =rw.ResultNewName;
+                author.Category = categoryName;
+                InfoUpdater.Categories.GetCategoryFromName(categoryName);
+                InfoUpdater.Save(false);
             }
             AuthorsListBox.ScrollIntoView(author);
             InfoUpdater.Save();

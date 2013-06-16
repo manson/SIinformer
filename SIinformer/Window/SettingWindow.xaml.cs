@@ -81,6 +81,7 @@ namespace SIinformer.Window
             if (base.ShowDialog()==true)
             {
                 Original.PartialCopy(Result);
+                Original.SaveToXML();
             }
             return Original;
         }
