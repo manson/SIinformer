@@ -83,18 +83,22 @@
                         </StackPanel>
                         <CheckBox Margin="3,0,0,0" IsChecked="{Binding Path=MarkAuthorIsReadWithAuthorPage, Mode=TwoWay}">Помечать автора прочитанным при открытии его страницы</CheckBox>
                         <CheckBox Margin="3,0,0,0" IsChecked="{Binding Path=OpenAuthorPageSortingDate, Mode=TwoWay}">Открывать отсортированную по дате страницу автора</CheckBox>
-                        <StackPanel Orientation="Horizontal">
+                        <StackPanel Orientation="Horizontal" Visibility="Collapsed">
                             <TextBlock Text="Периодичность обновления" Margin="5,0,0,0" VerticalAlignment="Center"/>
                             <ComboBox Width="150" Margin="5,2,0,2"
                                       ItemsSource="{Binding Source={StaticResource IntervalOfUpdateValues}, Converter={StaticResource IntervalOfUpdateConverter}}" 
                                       SelectedValue="{Binding Path=IntervalOfUpdate, Mode=TwoWay, Converter={StaticResource IntervalOfUpdateConverter}}"/>
                         </StackPanel>
-                        <CheckBox Margin="3,0,0,0" IsChecked="{Binding Path=UseDatabase, Mode=TwoWay}">Использовать базу данных db4o для хранения данных</CheckBox>
+                        <CheckBox Visibility="Collapsed" Margin="3,0,0,0" IsChecked="{Binding Path=UseDatabase, Mode=TwoWay}">Использовать базу данных db4o для хранения данных</CheckBox>
+                        <CheckBox x:Name="ChkDoAutomaticalyChecking" Unchecked="ChkDoAutomaticalyChecking_OnChecked" Checked="ChkDoAutomaticalyChecking_OnChecked" Margin="3,0,0,0" IsThreeState="False">Проверять автоматически обновления книг согласно расписанию</CheckBox>
                         <StackPanel Orientation="Horizontal">
                             <Button Click="ButtonMarkAuthorsAsRead_Click" Padding="5,2,5,2" >Пометить всех авторов как прочитанных</Button>
                             <Button Click="ButtonReadLinksFromExternalFile_Click" Padding="5,2,5,2" Margin="5,0">Загрузить ссылки из внешнего файла</Button>
                         </StackPanel>
-                        <Button Click="DoDefragmentAndBackupDB_Click" Padding="5,2,5,2" Margin="5,0">При запуске программы выполнить дефрагментацию и бекап БД</Button>
+                        <StackPanel Orientation="Horizontal">
+                            <Button Click="ExportAuthorsOnClicked" Padding="5,2,5,2" Margin="0">Выгрузить ссылки авторов во внешний файл</Button>
+                        </StackPanel>
+                        <Button Visibility="Collapsed" Click="DoDefragmentAndBackupDB_Click" Padding="5,2,5,2" Margin="5,0">При запуске программы выполнить дефрагментацию и бекап БД</Button>
                         <CheckBox Margin="3,0,0,0" IsChecked="{Binding Path=SkipBookDescription, Mode=TwoWay}">При проверке обновлений не учитывать изменения в аннотации (описании) книги</CheckBox>
                         <CheckBox Margin="3,0,0,0" IsChecked="{Binding Path=SaveStatisticsOfElasticScheduler, Mode=TwoWay}">Сохранять статистику планировщика проверок</CheckBox>
                     </StackPanel>

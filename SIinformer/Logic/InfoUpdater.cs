@@ -43,27 +43,29 @@ namespace SIinformer.Logic
             _updater = new Updater(_setting, _logger);
             _updater.UpdaterComplete += UpdaterComplete;
 
-            
+            _updateTimer = new Timer { Interval = 300000, AutoReset = false }; // 3600000
+            _updateTimer.Elapsed += (o, e) =>
+            {
+                if (!IsBusy())
+                    UpdateAuthors();
+            };
 
-#if !DEBUG           
-                UpdateAuthors();
-                _updateTimer = new Timer { Interval = 300000, AutoReset = false }; // 3600000
+
+#if !DEBUG                          
+               if (_setting!=null && _setting.IntervalOfUpdate>0)
+                    UpdateAuthors();
             
 #else
             _updateTimer = new Timer { Interval = 60000, AutoReset = false};
 #endif
-            _updateTimer.Elapsed += (o, e) =>
-                                        {
-                                            if (!IsBusy())
-                                                UpdateAuthors();
-                                        };
-
+           
             _setting.PropertyChanged += (o, e) =>
             {
                 if (e.PropertyName == "IntervalOfUpdate")
                 {
                     UpdateIntervalAndStart();
-                    _logger.Add("Периодичность обновления: " + IntervalOfUpdateConverter.Parse(_setting.IntervalOfUpdate));
+                    //_logger.Add("Периодичность обновления: " + IntervalOfUpdateConverter.Parse(_setting.IntervalOfUpdate));
+                    _logger.Add(_setting.IntervalOfUpdate==0 ? "Периодичность проверок обновлений остановлена в настройках" : "Периодичность проверок обновлений запущена");
                 }
             };
 
@@ -329,22 +331,30 @@ namespace SIinformer.Logic
 
         public static void UpdateIntervalAndStart()
         {
+            if (_updateTimer == null || _setting==null) return;
             if (_setting.IntervalOfUpdate == 0) _updateTimer.Stop();
             else
             {
-                _updateTimer.Interval = _setting.IntervalOfUpdate *  300000;// так как у нас теперь персональное расписание для авторов, то ставим 5 минут. Было - 3600000;
+                _updateTimer.Interval =  300000;// так как у нас теперь персональное расписание для авторов, то ставим 5 минут. Было - 3600000;
                 _updateTimer.Start();
             }
+            
+
         }
 
         private static void UpdateAuthors(bool manualProcessing=false)
         {
             if (!_updater.IsBusy)
             {
-                Save();
-                _logger.Add("Производится проверка обновлений...");
+                Save();                
                 // выбираем авторов, время проверки которых подошло или, если запущен ручной режим проверки - всех авторов
                 var updatedAuthor = Authors.Where(author => !author.IsIgnored && !author.IsDeleted && (manualProcessing ? true : author.NextCheckDate<DateTime.Now)).ToList();
+                if (updatedAuthor.Count == 0)
+                {
+                    UpdateIntervalAndStart();
+                    return;
+                }
+                _logger.Add("Производится проверка обновлений книг...");
                 try
                 {
                     if (_setting.AfterUpdater.Trim() != "")

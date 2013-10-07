@@ -8,18 +8,21 @@ using Microsoft.Win32;
 using SIinformer.Readers;
 using SIinformer.Utils;
 using SIinformer.Logic;
-
+using System.Linq;
 namespace SIinformer.Window
 {
     /// <summary>
     /// Логика взаимодействия для SettingWindow.xaml
     /// </summary>
     public partial class SettingWindow
-    {        
+    {
+        Setting _setting = null;
+
         public SettingWindow()
         {
             InitializeComponent();
-
+           
+            
             currentCacheSize.Text = "???/";
             BackgroundWorker worker = new BackgroundWorker();
             worker.RunWorkerCompleted += ((o, e) =>
@@ -50,6 +53,8 @@ namespace SIinformer.Window
             Original = setting;
             Result = new Setting();
             Result.PartialCopy(Original);
+            _setting = Result;
+            ChkDoAutomaticalyChecking.IsChecked = _setting.IntervalOfUpdate == 0 ? false : true;
             DataContext = Result;            
         }
 
@@ -193,6 +198,30 @@ namespace SIinformer.Window
         {
             // создадим файл, говорящий, что нам понадобится сделать дефрагментацию и бекап БД при загрузке системы
             File.CreateText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "do_defragment_backup")).Close();
+        }
+
+        private void ExportAuthorsOnClicked(object sender, RoutedEventArgs e)
+        {
+            var dlg = new SaveFileDialog();
+            dlg.Title = "Выгрузка ссылок авторов";
+            dlg.FileName = "authors.txt"; // Default file name
+            dlg.DefaultExt = "txt"; // Default file extension
+            dlg.Filter = ""; // Filter files by extension
+            var result = dlg.ShowDialog();
+            // Process open file dialog box results
+            if (result == true)
+            {
+              File.WriteAllLines(dlg.FileName, InfoUpdater.Authors.Select(x=>x.URL).ToArray());
+                MessageBox.Show("Выгрузка завершена");
+            }
+
+            //
+        }
+
+        private void ChkDoAutomaticalyChecking_OnChecked(object sender, RoutedEventArgs e)
+        {
+            _setting.IntervalOfUpdate = (bool)ChkDoAutomaticalyChecking.IsChecked ? 1 : 0;
+
         }
     }
 }

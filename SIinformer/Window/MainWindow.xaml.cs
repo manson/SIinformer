@@ -590,7 +590,7 @@ namespace SIinformer.Window
         {
             if (!string.IsNullOrEmpty(AddAuthorTextBox.Text))
             {
-                AddAuthorPP(AddAuthorTextBox.Text);
+                AddAuthorPP(AddAuthorTextBox.Text.Trim());
                 AddAuthorTextBox.Text = "";
             }
         }
