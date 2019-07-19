@@ -47,7 +47,7 @@ namespace SIinformer.Logic
         {
             //new ElasticScheduler(_logger, _setting).MakePlan(updatedAuthor);
             _baloonInfo = "";
-            if (!ManualUpdater)
+            //if (!ManualUpdater)
                 _logger.Working = true;
             _worker.RunWorkerAsync(updatedAuthor);
         }
@@ -59,7 +59,7 @@ namespace SIinformer.Logic
         private void WorkerRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             App.BalanceInterval = 0;// обнуляем стартовый баланс
-            if (!ManualUpdater)
+            //if (!ManualUpdater)
                 _logger.Working = false;
             if (e.Cancelled)
                 _logger.Add("Проверка прервана: " + DateTime.Now);
@@ -91,7 +91,7 @@ namespace SIinformer.Logic
                             new SetStatusParam
                                 {
                                     Message =
-                                        string.Format("{1}/{2}: '{0}' проверяется", author.Name, index, list.Count),
+                                        string.Format("{1}/{2}: '{0}' проверяется с родного сайта", author.Name, index, list.Count),
                                     ToMessage = true,
                                     IsError = false
                                 });
@@ -126,7 +126,7 @@ namespace SIinformer.Logic
                             new SetStatusParam
                                 {
                                     Message = ex.StackTrace,
-                                    ToMessage = true,
+                                    ToMessage = false,
                                     IsError = true
                                 });
                     SyncRun(Action.SetStatus,

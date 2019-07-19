@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -60,8 +61,29 @@ namespace SIinformer
                 }
                 else
                     ProgramUpdatesUrl = setting.ProgramUpdatesUrl;
+                IWebProxy proxy = null;
 
-                _programUpdater = new Client("siinformer", Version, ProgramUpdatesUrl); // создаем апдейтер
+                if (setting.ProxySetting!=null && setting.ProxySetting.UseProxy)
+                {
+                    IPAddress test;
+                    if (IPAddress.TryParse(setting.ProxySetting.Address, out test))
+                    {
+
+                        proxy = setting.ProxySetting.UseAuthentification
+                                    ? new WebProxy(
+                                          new Uri("http://" + setting.ProxySetting.Address + ":" +
+                                                  setting.ProxySetting.Port),
+                                          false,
+                                          new string[0],
+                                          new NetworkCredential(setting.ProxySetting.UserName,
+                                                                setting.ProxySetting.Password))
+                                    : new WebProxy(
+                                          new Uri("http://" + setting.ProxySetting.Address + ":" +
+                                                  setting.ProxySetting.Port));
+                    }
+                }
+
+                _programUpdater = new Client("siinformer", Version, ProgramUpdatesUrl,true, 1, proxy); // создаем апдейтер
                 if (!_programUpdater.IsErrorUpdating()) // если после последнего обновления не было ошибок. Если были, то этот момент мы отработаем уже в интерфейсе после  загрузки интерфейса
                     if (_programUpdater.IsPendingUpdate())// если ожидается обновление, то есть обнова распакована, но почему-то во время работы программы оно не пыло применено
                     {

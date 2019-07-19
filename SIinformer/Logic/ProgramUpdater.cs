@@ -43,14 +43,14 @@ namespace SIinformer.Logic
                                                                  upateInfo = upateInfo.Substring(0, 800) + "...";
                                                              if (MessageBox.Show("Обнаружено обновление программы:\r\n" + upateInfo + "\r\n\r\nСкачать его?", "Обновление", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No) return;
                                                          }                                                         
-                                                          _logger.Add(string.Format("Обнаружено обновление. Текущая версия {0}, версия обновления {1}. Запуск скачивания... ", App.ProgramUpdater.CurrentVersion, App.ProgramUpdater.ServerVersion), true,false);
+                                                          _logger.Add(string.Format("Обнаружено обновление программы. Текущая версия {0}, версия обновления {1}. Запуск скачивания... ", App.ProgramUpdater.CurrentVersion, App.ProgramUpdater.ServerVersion), true,false);
                                                          
                                                          App.ProgramUpdater.DownloadUpdate();
                                                      };
             App.ProgramUpdater.HasNoUpdateEvent += (s, e) =>
                                                        {
-                                                           if (_windowVisibility == Visibility.Visible)                                                         
-                                                                _logger.Add("Обновление на сервере отсутствует", true, false);
+                                                           //if (_windowVisibility == Visibility.Visible)                                                         
+                                                           _logger.Add("Обновление программы на сервере отсутствует", true, false);
                                                        };
             App.ProgramUpdater.UpdateDownloadedEvent += (s, e) =>
                                                             {

@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Xml;
 using System.Xml.Serialization;
+using SIinformer.Logic.Sites;
 
 namespace SIinformer.Logic
 {
@@ -79,11 +81,14 @@ namespace SIinformer.Logic
                 }
                 while (result.Any(x => x.IsDeleted))                
                     result.Remove(result.FirstOrDefault(x => x.IsDeleted));
-                
-                //var r = XmlReader.Create(mstream,new XmlReaderSettings { CheckCharacters = false,  });
-
-                //var sr = new XmlSerializer(typeof(AuthorList));
-                //result = (AuthorList)sr.Deserialize(r);
+                // подменим нерабочий домен
+                result.All(b =>
+                               {
+                                   if (b.URL.StartsWith("http://zhurnal.lib.ru"))
+                                       b.URL = b.URL.Replace("http://zhurnal.lib.ru", "http://samlib.ru");
+                                   return true;
+                               });
+                //
                 isCorrect = true;
             }
             catch
@@ -161,8 +166,23 @@ namespace SIinformer.Logic
 
         public Author FindAuthor(string url)
         {
-            // Если в базе все еще хранится zhurnal.lib.ru, делаем поиск по измененному урлу.
-            return this.FirstOrDefault(a => a.URL.Replace("zhurnal.lib.ru", "samlib.ru") == url);
+            if (string.IsNullOrWhiteSpace(url)) return null;
+            // в связи с путанницей с разными доменами СИ по одному автору и адресом странички, делаем список возможных значений
+            var urlVariants = GetAuthorUrlVariants(url);
+            return this.FirstOrDefault(a => urlVariants.Contains(a.URL));
+                //a.URL.Replace("zhurnal.lib.ru", "samlib.ru") );
+        }
+        /// <summary>
+        /// получить различные варианты написания адреса автора для зеркал
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        List<string> GetAuthorUrlVariants(string url)
+        {
+            var site = SitesDetector.GetSite(url);
+            if (site != null)
+                return site.GetUrlVariants(url);
+            return null;
         }
 
         public string[] GetCategoryNames()

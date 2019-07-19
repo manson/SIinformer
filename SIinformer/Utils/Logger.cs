@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Text;
+using System.Timers;
 using System.Windows.Media;
 
 namespace SIinformer.Utils
@@ -8,9 +10,19 @@ namespace SIinformer.Utils
     {
         private readonly StringBuilder _errorLog = new StringBuilder();
         private readonly StringBuilder _log = new StringBuilder();
+        private readonly ConcurrentQueue<LogItem> _logBuffer = new ConcurrentQueue<LogItem>();
         private bool _isError;
         private string _message = "";
         private bool _working;
+        private Timer _logTimer;
+
+        public Logger()
+        {
+            _logTimer = new Timer(100);
+            _logTimer.Elapsed += (s, e) => LogQueueProcess();
+            _logTimer.AutoReset = false;
+            _logTimer.Start();
+        }
 
         public Brush Foreground
         {
@@ -75,17 +87,36 @@ namespace SIinformer.Utils
 
         public void Add(string s, bool toMessage, bool isError)
         {
-            if (!s.StartsWith("->"))
+            _logBuffer.Enqueue(new LogItem{LogMessage = s, ToMessage = toMessage, IsError = isError});
+            _logTimer.Start();
+        }
+
+        private void LogQueueProcess()
+        {
+            if (_logBuffer.IsEmpty) return;           
+            LogItem logItem = null;
+            while (_logBuffer.TryDequeue(out logItem))
             {
-                _log.Insert(0, s + Environment.NewLine);
-                if (isError)
+                if (!logItem.LogMessage.StartsWith("->"))
                 {
-                    _errorLog.Insert(0, s + Environment.NewLine);
-                    IsError = true;
+                    _log.Insert(0, logItem.LogMessage + Environment.NewLine);
+                    if (logItem.IsError)
+                    {
+                        _errorLog.Insert(0, logItem.LogMessage + Environment.NewLine);
+                        IsError = true;
+                    }
                 }
+                if (logItem.ToMessage) Message = logItem.LogMessage.StartsWith("->") ? logItem.LogMessage.Substring(2) : logItem.LogMessage;
+                RaisePropertyChanged("Log");
             }
-            if (toMessage) Message = s.StartsWith("->") ? s.Substring(2) : s;
-            RaisePropertyChanged("Log");
+            _logTimer.Start(); // на всякий случай, повторно пройдемся. Если лог пуст, то на первой строчке этой функции все затухнет
+        }
+
+        private class LogItem
+        {
+            public string LogMessage { get; set; }
+            public bool ToMessage { get; set; }
+            public bool IsError { get; set; }
         }
     }
 }

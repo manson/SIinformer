@@ -56,6 +56,8 @@ namespace SIinformer.Logic
         /// </summary>
         public int SizeOld { get; set; }
 
+        public long ServerStamp { get; set; }// серверный штамп
+
         /// <summary>
         /// Размер книги для вывода на экран
         /// </summary>

@@ -103,6 +103,8 @@
                         Executed="FilterCommand_Executed" />
         <CommandBinding Command="{x:Static Window:MainCommands.PlayPauseListCommand}" 
                         Executed="PlayPauseListCommand_Executed" />
+        <CommandBinding Command="{x:Static Window:MainCommands.DirectPlayPauseListCommand}" 
+                        Executed="DirectPlayPauseListCommand_Executed" />
         <CommandBinding Command="{x:Static Window:MainCommands.CategoryCollapsedCommand}" 
                         Executed="CategoryCollapsedCommand_Executed" CanExecute="CategoryListBoxIsNotNull" />
         <CommandBinding Command="{x:Static Window:MainCommands.CategoryUpCommand}" 
@@ -124,9 +126,12 @@
         <!-- Панель инструментов -->
         <Grid Grid.Row="0">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" FlowDirection="LeftToRight">
-                <CheckBox x:Name="PlayPauseButton" ToolTip="Обновить данные" VerticalAlignment="Bottom" HorizontalAlignment="Left" Content="CheckBox" 
+                <CheckBox x:Name="PlayPauseButton" ToolTip="Обновить данные с сервера статистики" VerticalAlignment="Bottom" HorizontalAlignment="Left" Content="CheckBox" 
                       Style="{DynamicResource PlayPauseButtonStyle}" Height="30" Width="30" Margin="5,5,5,5" Cursor="Hand" 
                       Command="{x:Static Window:MainCommands.PlayPauseListCommand}" IsChecked="{Binding Path=Working}"/>
+                <CheckBox x:Name="DirectPlayPauseButton" ToolTip="Обновить данные с родного сайта" VerticalAlignment="Bottom" HorizontalAlignment="Left" Content="CheckBox" 
+                      Style="{DynamicResource PlayPauseButtonStyle}" Height="30" Width="30" Margin="5,5,5,5" Cursor="Hand" 
+                      Command="{x:Static Window:MainCommands.DirectPlayPauseListCommand}" IsChecked="{Binding Path=Working}"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" FlowDirection="RightToLeft" VerticalAlignment="Top">
                 <Button x:Name="SortDirectButton" Margin ="8,-11,0,4" Width="16" Height="16" VerticalAlignment="Top"

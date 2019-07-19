@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,6 +15,7 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using Laharsub.Subscriptions;
 using SIinformer.Logic;
 using SIinformer.Readers;
 using SIinformer.Utils;
@@ -140,15 +142,7 @@ namespace SIinformer.Window
                                                             (le.PropertyDescriptor.Name == "IsNew"))
                                                         {
                                                             AuthorsListBox_SelectionChanged(o, null);
-                                                            bool summaryIsNew = false;
-                                                            foreach (Author author in InfoUpdater.Authors)
-                                                            {
-                                                                if (author.IsNew)
-                                                                {
-                                                                    summaryIsNew = true;
-                                                                    break;
-                                                                }
-                                                            }
+                                                            bool summaryIsNew = InfoUpdater.Authors.Any(author => author.IsNew);
                                                             if (!summaryIsNew)
                                                                 _mNotifyIcon.Icon = Properties.Resources.favicon;
                                                         }
@@ -168,12 +162,14 @@ namespace SIinformer.Window
             AuthorsListBox.ItemsSource = InfoUpdater.OutputCollection;
             StatusLabel.DataContext = _logger;
             PlayPauseButton.DataContext = _logger;
+            DirectPlayPauseButton.DataContext = _logger;
             LogListBox.DataContext = _logger;
             DownloadTextHelper.Init(downloadHelper, _logger, _setting);
             downloadHelper.ItemsSource = DownloadTextHelper.DownloadTextItems;
 
-            AuthorsListBox.SelectedItem =
-                InfoUpdater.Authors.FindAuthor(_setting.LastAuthorUrl.Replace("zhurnal.lib.ru", "samlib.ru"));
+            if (!string.IsNullOrWhiteSpace(_setting.LastAuthorUrl))
+                AuthorsListBox.SelectedItem =
+                    InfoUpdater.Authors.FindAuthor(_setting.LastAuthorUrl.Replace("zhurnal.lib.ru", "samlib.ru"));
             AuthorsListBox.Focus();
             SetFocusToSelectedItem();
 
@@ -183,10 +179,47 @@ namespace SIinformer.Window
             LoadedFlag = true;
             //инициализируем обновлялку и передадим текущее состояние окна
             ProgramUpdater.Instance.Init(Visibility, _logger);
-
+            ProcessMessageBrokerStatusBySetting();
 
         }
 
+        /// <summary>
+        /// если у нас стоит использовать или нет брокер сообщений, то надо обработать статус движка
+        /// </summary>
+        void ProcessMessageBrokerStatusBySetting()
+        {
+            var messageBrokerAskLockFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "MessageBusAsk.lock");
+            if (_setting.UseMessageBroker)
+            {
+                // если сервис включен, все равно поставить маркер, чтобы не спрашивать и не переключать на активный режим, если кто-то решит вылючить
+                if (!File.Exists(messageBrokerAskLockFile)) File.WriteAllText(messageBrokerAskLockFile, "");                 
+                
+                if (string.IsNullOrWhiteSpace(_setting.ClientId))
+                {
+                    // сгенерируем наш уникальный айди и сохраним в настройках. Будем делать примитивную статистику на сервере
+                    _setting.ClientId = Guid.NewGuid().ToString();
+                    _setting.SaveToXML();
+                }
+                // укажем наш клиентский айди. Если не укажем - он сгенерируется для данной сессии. А если сохраним в настройках, то будет использоваться один и тот же              
+                SubscriptionManager.CurrentClientId = _setting.ClientId;
+                MessageBroker.HiLevelManager.Manager.GetInstance()
+                             .InitSubscriptionManager(_logger, _setting, InfoUpdater.BookUpdateArrived);
+            }
+            else
+            {
+                
+                if (!File.Exists(messageBrokerAskLockFile))
+                {
+                    File.WriteAllText(messageBrokerAskLockFile,"");
+                    _setting.UseMessageBroker = true;
+                    MessageBox.Show(
+                        "Наиболее предпочтительным является использовать сервер мгновенных распределенных уведомлений, который позволяет снизить нагрузку на Самиздат (или иной другой сайт, поддерживаемый информатором) и в то же время более оперативно доставлять информацию об обновлениях. Этот сервис сейчас был автоматически включен. Если вы не хотите его использовать, выключите в настройках. Это сообщение больше не будет появляться.",
+                        "Информатор СИ");
+                    return;
+                }
+                MessageBroker.HiLevelManager.Manager.GetInstance().StopSubscriptions();
+            }
+        }
         /// <summary>
         /// Контроль показа панели с произведениями на главной странице
         /// </summary>
@@ -267,6 +300,9 @@ namespace SIinformer.Window
         {
             switch (e.PropertyName)
             {
+                case "UseMessageBroker":
+                    ProcessMessageBrokerStatusBySetting();
+                    break;
                 case "UseDatabase":
                     if (currentUseDatabase==_setting.UseDatabase) return;
                     if (_setting.UseDatabase)
@@ -357,6 +393,11 @@ namespace SIinformer.Window
             InfoUpdater.ManualProcessing();
         }
 
+        private void DirectPlayPauseListCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            AuthorsListBox.Focus();
+            InfoUpdater.ManualProcessing(true);
+        }
         private void SortDirectButton_Click(object sender, RoutedEventArgs e)
         {
             AuthorsListBox.Focus();
@@ -703,7 +744,7 @@ namespace SIinformer.Window
             Author author = (Author) AuthorsListBox.SelectedValue;
             if (author.IsUpdated) return;
             _logger.Add(string.Format("'{0}' проверяется", author.Name));
-            Updater updater = new Updater(_setting, _logger) {ManualUpdater = true};
+            var updater = new Updater(_setting, _logger) {ManualUpdater = true};
             updater.UpdaterComplete += ((o, arg) =>
                                             {
                                                 if (arg.Error != null)
@@ -720,7 +761,8 @@ namespace SIinformer.Window
                                                     AuthorsListBox.ScrollIntoView(AuthorsListBox.SelectedValue);
                                                 }
                                             });
-            updater.RunWorkerAsync(new List<Author> {author});
+            //updater.RunWorkerAsync(new List<Author> {author});
+            InfoUpdater.UpdateAuthors(new List<Author> { author }, updater);
         }
 
         private void IsIgnoredCommand_Executed(object sender, ExecutedRoutedEventArgs e)
@@ -1372,6 +1414,8 @@ namespace SIinformer.Window
             si_toolbar.Visibility = (si_toolbar.Visibility == Visibility.Visible) ? Visibility.Collapsed : Visibility.Visible;
         }
 
+       
+
     }
 
     public static class MainCommands
@@ -1444,6 +1488,16 @@ namespace SIinformer.Window
                                                                                   ModifierKeys.Control |
                                                                                   ModifierKeys.Shift)
                                                                }));
+
+        public static readonly RoutedUICommand DirectPlayPauseListCommand =
+            new RoutedUICommand("Обновить данные с оригинального сайта", "DirectPlayPauseListCommand", typeof (MainWindow),
+                                new InputGestureCollection(new InputGesture[]
+                                                               {
+                                                                   new KeyGesture(Key.O,
+                                                                                  ModifierKeys.Control |
+                                                                                  ModifierKeys.Shift)
+                                                               }));
+
 
         public static readonly RoutedUICommand RenameAuthorOrCategoryCommand =
             new RoutedUICommand("Переименовать автора или категорию", "RenameAuthorOrCategoryCommand",

@@ -25,5 +25,7 @@ namespace SIinformer.Logic.Sites
 
         int GetSupportedReaderNumber(int suggestedNumber);
 
+        List<string> GetKnownDomens();
+        List<string> GetUrlVariants(string url);
     }
 }

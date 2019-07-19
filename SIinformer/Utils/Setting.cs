@@ -69,6 +69,9 @@ namespace SIinformer.Utils
 
         public bool CloseHowToMinimize { get; set; }
         public ProxySetting ProxySetting { get; set; }
+
+        
+
         /// <summary>
         /// Урл, где смотреть обновления
         /// </summary>
@@ -127,6 +130,19 @@ namespace SIinformer.Utils
                     _skipBookDescription = value;
                     RaisePropertyChanged("SkipBookDescription");
                 }
+            }
+        }
+
+
+        public bool UseMessageBroker
+        {
+            get { return _useMessageBroker; }
+            set {
+                if (_useMessageBroker != value)
+                {
+                    _useMessageBroker = value;
+                    RaisePropertyChanged("UseMessageBroker");
+                } 
             }
         }
 
@@ -626,38 +642,54 @@ namespace SIinformer.Utils
         /// <param name="authors"></param>
         private void Cleaning(AuthorList authors)
         {
-            string[] keys = new string[AdvancedWindowSettingDictionary.Keys.Count];
-            AdvancedWindowSettingDictionary.Keys.CopyTo(keys, 0);
-            foreach (string key in keys)
+            try
             {
-                if ((key != "Default") && (authors.FindAuthor(key) == null))
-                    AdvancedWindowSettingDictionary.Remove(key);
-            }
-            Dictionary<string, AdvancedWindowSetting> copy =
-                new Dictionary<string, AdvancedWindowSetting>(AdvancedWindowSettingDictionary);
-            AdvancedWindowSetting @default = AdvancedWindowSettingDictionary["Default"];
-            foreach (KeyValuePair<string, AdvancedWindowSetting> pair in copy)
-            {
-                if ((pair.Key != "Default") && (pair.Value.Size == @default.Size) &&
-                    (pair.Value.HeightComment == @default.HeightComment))
-                    AdvancedWindowSettingDictionary.Remove(pair.Key);
-            }
+                string[] keys = new string[AdvancedWindowSettingDictionary.Keys.Count];
+                AdvancedWindowSettingDictionary.Keys.CopyTo(keys, 0);
+                foreach (string key in keys)
+                {
+                    if ((key != "Default") && (authors.FindAuthor(key) == null))
+                        AdvancedWindowSettingDictionary.Remove(key);
+                }
+                Dictionary<string, AdvancedWindowSetting> copy =
+                    new Dictionary<string, AdvancedWindowSetting>(AdvancedWindowSettingDictionary);
+                AdvancedWindowSetting @default = AdvancedWindowSettingDictionary["Default"];
+                foreach (KeyValuePair<string, AdvancedWindowSetting> pair in copy)
+                {
+                    if ((pair.Key != "Default") && (pair.Value.Size == @default.Size) &&
+                        (pair.Value.HeightComment == @default.HeightComment))
+                        AdvancedWindowSettingDictionary.Remove(pair.Key);
+                }
 
-            keys = new string[AuthorWindowSettingDictionary.Keys.Count];
-            AuthorWindowSettingDictionary.Keys.CopyTo(keys, 0);
-            foreach (string key in keys)
-            {
-                if ((key != "Default") && (authors.FindAuthor(key) == null))
-                    AuthorWindowSettingDictionary.Remove(key);
+                keys = new string[AuthorWindowSettingDictionary.Keys.Count];
+                AuthorWindowSettingDictionary.Keys.CopyTo(keys, 0);
+                foreach (string key in keys)
+                {
+                    try
+                    {
+                        if ((key != "Default") && (authors.FindAuthor(key) == null))
+                            AuthorWindowSettingDictionary.Remove(key);
+
+                    }
+                    catch
+                    {
+
+                    }
+                }
+                var copy1 =
+                    new Dictionary<string, AuthorWindowSetting>(AuthorWindowSettingDictionary);
+                AuthorWindowSetting @default1 = AuthorWindowSettingDictionary["Default"];
+                foreach (var pair in copy1)
+                {
+                    if ((pair.Key != "Default") && (pair.Value.Size == @default1.Size) &&
+                        (pair.Value.Location == @default1.Location) &&
+                        (pair.Value.HeightComment == @default1.HeightComment))
+                        AuthorWindowSettingDictionary.Remove(pair.Key);
+                }
             }
-            var copy1 =
-                new Dictionary<string, AuthorWindowSetting>(AuthorWindowSettingDictionary);
-            AuthorWindowSetting @default1 = AuthorWindowSettingDictionary["Default"];
-            foreach (var pair in copy1)
+            catch
             {
-                if ((pair.Key != "Default") && (pair.Value.Size == @default1.Size) &&
-                    (pair.Value.Location == @default1.Location) && (pair.Value.HeightComment == @default1.HeightComment))
-                    AuthorWindowSettingDictionary.Remove(pair.Key);
+                
             }
         }
 
@@ -790,6 +822,7 @@ namespace SIinformer.Utils
         private string _lastAuthorUrl="";
         private bool _skipBookDescription;
         private bool _saveStatisticsOfElasticScheduler;
+        private bool _useMessageBroker;
 
         public string AfterUpdater
         {
@@ -849,6 +882,11 @@ namespace SIinformer.Utils
             set { _lastAuthorUrl = value; }
         }
 
+        /// <summary>
+        /// уникальный идентификатор пользователя. Генерируется, если его нет и сохраняется. Используется в подписках.
+        /// </summary>
+        public string ClientId{ get; set; }
+
         #endregion
 
         /// <summary>
@@ -889,6 +927,7 @@ namespace SIinformer.Utils
             //GooglePassword = original.GooglePassword;
             SkipBookDescription = original.SkipBookDescription;
             SaveStatisticsOfElasticScheduler = original.SaveStatisticsOfElasticScheduler;
+            UseMessageBroker = original.UseMessageBroker;
         }
 
         public static string ErrorLogFileName()

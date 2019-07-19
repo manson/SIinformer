@@ -39,13 +39,14 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
+    <Optimize>true</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -56,6 +57,7 @@
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Db4objects.Db4o">
@@ -63,6 +65,9 @@
     </Reference>
     <Reference Include="Db4objects.Db4o.CS">
       <HintPath>.\Db4objects.Db4o.CS.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.5.0.8\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="PresentationUI, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -183,6 +188,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Compile Include="ApiStuff\ApiManager.cs" />
+    <Compile Include="ApiStuff\AuthorUpdatesInfoOperationResult.cs" />
+    <Compile Include="ApiStuff\BooleanOperationResult.cs" />
+    <Compile Include="ApiStuff\IRemoteOperationResult.cs" />
+    <Compile Include="ApiStuff\JsonRpcClient.cs" />
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -192,6 +202,14 @@
     <Compile Include="Controls\ToolBar.xaml.cs">
       <DependentUpon>ToolBar.xaml</DependentUpon>
     </Compile>
+    <Compile Include="FastBinaryJSON\BJSON.cs" />
+    <Compile Include="FastBinaryJSON\BJsonParser.cs" />
+    <Compile Include="FastBinaryJSON\BJsonSerializer.cs" />
+    <Compile Include="FastBinaryJSON\dynamic.cs" />
+    <Compile Include="FastBinaryJSON\Getters.cs" />
+    <Compile Include="FastBinaryJSON\Reflection.cs" />
+    <Compile Include="FastBinaryJSON\SafeDictionary.cs" />
+    <Compile Include="FastJSON\Formatter.cs" />
     <Compile Include="Logic\Author.cs" />
     <Compile Include="Logic\ElasticScheduler.cs" />
     <Compile Include="Logic\ProgramUpdater.cs" />
@@ -202,6 +220,20 @@
     <Compile Include="Logic\TextCleaner.cs" />
     <Compile Include="Logic\Transport\TransportBookInfo.cs" />
     <Compile Include="Logic\Updater.cs" />
+    <Compile Include="MessageBroker\Client\HttpLongPollManager.cs" />
+    <Compile Include="MessageBroker\Client\PubsubClient.cs" />
+    <Compile Include="MessageBroker\Client\PubsubMessage.cs" />
+    <Compile Include="MessageBroker\Client\Subscription.cs" />
+    <Compile Include="MessageBroker\HiLevelManager\Manager.cs" />
+    <Compile Include="FastJSON\dynamic.cs" />
+    <Compile Include="FastJSON\Getters.cs" />
+    <Compile Include="FastJSON\JSON.cs" />
+    <Compile Include="FastJSON\JsonParser.cs" />
+    <Compile Include="FastJSON\JsonSerializer.cs" />
+    <Compile Include="FastJSON\Reflection.cs" />
+    <Compile Include="FastJSON\SafeDictionary.cs" />
+    <Compile Include="MessageBroker\SubscriptionManager\SubscriptionManager.cs" />
+    <Compile Include="MessageBroker\SubscriptionManager\SubscriptionMessageCommand.cs" />
     <Compile Include="Readers\DownloadTextHelper.cs" />
     <Compile Include="Readers\HTMLConverter\HtmlCssParser.cs" />
     <Compile Include="Readers\HTMLConverter\HtmlDiff.cs" />
@@ -271,6 +303,7 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="app.config" />
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -347,6 +380,7 @@
       <Name>Manson.AutoUpdater.Client</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

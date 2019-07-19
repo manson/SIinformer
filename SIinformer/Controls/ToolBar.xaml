@@ -41,7 +41,27 @@
                             </TextBlock>
                         </Button.Content>
                     </Button>
-
+                    <Button Width="80" Margin="2" ToolTip="Найти соратников по чтению" Click="FindSimilarInformersButton_Click">
+                        <Button.Content>
+                            <TextBlock TextWrapping="Wrap" TextAlignment="Center" >
+                                Найти соратников по чтению
+                            </TextBlock>
+                        </Button.Content>
+                    </Button>
+                    <Button Width="100" Margin="2" ToolTip="Найти авторов, рекомендованных вам автоматическим анализом ваших авторов" Click="FindAuthorsButton_Click">
+                        <Button.Content>
+                            <TextBlock TextWrapping="Wrap" TextAlignment="Center" >
+                                Рекомендации по авторам
+                            </TextBlock>
+                        </Button.Content>
+                    </Button>
+                    <Button Width="80" Margin="2" ToolTip="Найти книги по авторам, названию, аннотации..." Click="FindBooksButton_Click">
+                        <Button.Content>
+                            <TextBlock TextWrapping="Wrap" TextAlignment="Center" >
+                                Найти книги
+                            </TextBlock>
+                        </Button.Content>
+                    </Button>
                 </WrapPanel>
             </Border>
         </Border>

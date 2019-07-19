@@ -10,12 +10,18 @@ namespace SIinformer.Logic.Sites
         public static ISite GetSite(string url)
         {
             url = url.ToLower().Trim();
-            if (url.StartsWith("http://samlib.ru")) return new Samlib();
-            if (url.StartsWith("http://zhurnal.lib.ru")) return new Samlib();
-            if (url.StartsWith("http://budclub.ru")) return new Samlib();
-            if (url.StartsWith("http://www.fanfiction.net/")) return new FanFiction();
-
+            ISite site=null;
+            site = new Samlib();
+            if (IsSiteOfThisDomain(url, site)) return site;
+            site = new FanFiction();
+            if (IsSiteOfThisDomain(url, site)) return site;
+            
             return null;
+        }
+
+        private static bool IsSiteOfThisDomain(string url, ISite site)
+        {
+            return site.GetKnownDomens().Any(url.StartsWith);
         }
     }
 }

@@ -11,6 +11,8 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Threading;
+using Laharsub.Subscriptions;
+using SIinformer.Logic.Transport;
 using SIinformer.Utils;
 using SIinformer.Window;
 //using Monitor=SISyncronizer.Monitor;
@@ -21,6 +23,7 @@ namespace SIinformer.Logic
 {
     public static class InfoUpdater
     {
+        private static bool StatServerUpdating = false;
         public static void Init(Setting setting, Logger logger)
         {
             _setting = setting;
@@ -43,18 +46,47 @@ namespace SIinformer.Logic
             _updater = new Updater(_setting, _logger);
             _updater.UpdaterComplete += UpdaterComplete;
 
-            _updateTimer = new Timer { Interval = 300000, AutoReset = false }; // 3600000
+            _updateTimer = new Timer { Interval = 60000, AutoReset = false }; // 3600000
             _updateTimer.Elapsed += (o, e) =>
             {
                 if (!IsBusy())
                     UpdateAuthors();
             };
 
-
-#if !DEBUG                          
-               if (_setting!=null && _setting.IntervalOfUpdate>0)
-                    UpdateAuthors();
+            _messageBrokerTrayInfoCollectorTimer=new Timer { Interval = 10000, AutoReset = false };
+            _messageBrokerTrayInfoCollectorTimer.Elapsed += (s, e) =>
+                                                                {
+                                                                    if (!string.IsNullOrWhiteSpace(_messageBrokerTrayInfo))
+                                                                    {
+                                                                        MainWindow.ShowTrayInfo(_messageBrokerTrayInfo.Trim());
+                                                                        _messageBrokerTrayInfo = "";
+                                                                        Save();
+                                                                    }
+                                                                    _messageBrokerTrayInfoCollectorTimer.Stop();
+                                                                    
+                                                                };
             
+
+
+#if !DEBUG
+            if (_setting != null && _setting.IntervalOfUpdate > 0)
+            {
+                if (_setting.UseMessageBroker)
+                {
+                    // запускаем проверку с сервера статистики в ручном режиме, то есть true, что значит надо проверить всех авторов из списка с сервера статистики и не запускать проверку с оригинала сайта для всех авторов
+                    _logger.Working = true;
+                    UpdateAuthorsFromStatServer(true, () =>
+                                                              {
+                                                                  StatServerUpdating = false;
+                                                                  if (_setting.UseMessageBroker)
+                                                                    _logger.Add(string.Format("{0} Проверка авторов с сервера статистики окончена", DateTime.Now.ToShortTimeString()));
+                                                                  // проверить авторов согласно расписанию
+                                                                   UpdateAuthorsFromSI(false);                                                                  
+                                                              });          
+                }
+                else
+                    UpdateAuthorsFromSI(false); // Запсутить првоерку с сайта оригинала согласно плана проверок
+            }
 #else
             _updateTimer = new Timer { Interval = 60000, AutoReset = false};
 #endif
@@ -143,6 +175,124 @@ namespace SIinformer.Logic
         public static ObservableCollection<object> OutputCollection { get; private set; }
         private static Logger _logger;
 
+        #region Работа с брокером сообщений
+
+        public static void BookUpdateArrived(string JsonCommand)
+        {
+            
+            try
+            {
+                if (string.IsNullOrWhiteSpace(JsonCommand)) return;                
+                var command = fastJSON.JSON.Instance.ToObject<SubscriptionMessageCommand>(JsonCommand);                
+                if (command.JsonObjectBytes==null) return;
+                var book = fastBinaryJSON.BJSON.Instance.ToObject<TransportBookInfo>(command.JsonObjectBytes); //fastJSON.JSON.Instance.ToObject<TransportBookInfo>(command.JsonObject);
+                var isMyInfo = (command.ClientId == SubscriptionManager.CurrentClientId); // это наш объект, предварительно обработанный сервером. Здесь сервер должен был проштамповать информацию своим датой-временем. Мы должны запомнить это.
+                
+
+                if (ProcessArrivedBook(book, isMyInfo)) return;
+            }
+            catch (Exception ex)
+            {
+                _logger.Add("Косяк понять, что пришло по шине уведомлений: " + ex.Message,true,true);
+            }
+
+        }
+
+        private static bool ProcessArrivedBook(TransportBookInfo book, bool isMyInfo)
+        {
+            if (book == null || string.IsNullOrWhiteSpace(book.AuthorLink)) return true;
+            if (Authors == null) return true;
+            var author = Authors.FindAuthor(book.AuthorLink);
+            if (author == null) return true;
+            var alreadyStared = author.IsNew;
+            if (author.IsIgnored || author.IsDeleted) return true;
+            var authorText = author.Texts.FirstOrDefault(t => t.Link == book.Link);
+                // Link  у нас - относительный путь, поэтому не преобразовываем
+            bool isNew = false;
+            bool isUpdated = false;
+
+            var convertedTime = new DateTime(book.UpdateDate, DateTimeKind.Utc).ToLocalTime();
+
+
+            if (isMyInfo)
+            {
+                if (authorText == null) return true;
+                // просто маркируем свои штампы серверным, не меняя локальные даты проверок
+                authorText.ServerStamp = book.UpdateDate;
+                author.ServerStamp = book.UpdateDate;
+            }
+            else
+            {
+                if (authorText == null)
+                {
+                    authorText = new AuthorText();
+                    isNew = true;
+                }
+                if (authorText.ServerStamp > book.UpdateDate) return true;
+
+                if (!isNew)
+                {
+                    book.Size = book.Size < 0 ? 0 : book.Size; // кооректируем, иногда бывает -1
+                    isUpdated = ((authorText.Name != book.Name || authorText.Size != book.Size ||
+                                  (_setting.SkipBookDescription ? false : authorText.Description != book.Description)));
+                }
+                if (!isNew && !isUpdated)
+                {
+                    authorText.ServerStamp = book.UpdateDate;// скорректируем локальное значение. поставим серверное
+                    return true;
+                }
+
+                _messageBrokerTrayInfoCollectorTimer.Stop();
+
+                authorText.Description = book.Description;
+                authorText.Genres = book.Genres;
+                authorText.Link = book.Link;
+                authorText.Name = book.Name;
+                authorText.SectionName = book.SectionName;
+
+                if (!authorText.IsNew)
+                    authorText.SizeOld = authorText.Size;
+
+                authorText.Size = book.Size;
+                authorText.UpdateDate = convertedTime;
+                authorText.ServerStamp = book.UpdateDate; // ставим штамп сервера
+
+                authorText.IsNew = true;
+                if (isNew)
+                    author.Texts.Add(authorText);
+                author.LastCheckDate = authorText.UpdateDate;
+                try
+                {
+                    if (author.NextCheckDate < author.LastCheckDate)
+                    {
+                        var elasticScheduler = new ElasticScheduler(_logger, _setting);
+                        elasticScheduler.MakePlan(author);
+                        elasticScheduler.SaveStatistics();
+                    }
+                    author.UpdateDate = authorText.UpdateDate;
+                    author.ServerStamp = book.UpdateDate; // ставим штамп сервера
+
+                    author.IsNew = true;
+
+                    _logger.Add(string.Format("StatServer> Уведомление: обновился {0} ({1})", author.Name, authorText.Name),
+                                true, false);
+                    if (!_messageBrokerTrayInfo.Contains(author.Name) && !alreadyStared)
+                        _messageBrokerTrayInfo = string.IsNullOrWhiteSpace(_messageBrokerTrayInfo)
+                                                     ? author.Name
+                                                     : _messageBrokerTrayInfo + "; " + author.Name;
+                    _messageBrokerTrayInfoCollectorTimer.Start();
+                }
+                catch (Exception ex)
+                {
+                    _logger.Add(string.Format("Ошибка формирования плана проверок автора {0} - {1}", author.Name, ex));
+                }
+            }
+            return false;
+        }
+
+        #endregion
+
+
         #region Операции с авторами (+, -, поиск и др.)
 
         public static Author AddAuthor(string url)
@@ -154,13 +304,21 @@ namespace SIinformer.Logic
             // аналог DoEvents в WPF, иначе "Добавление автора..." вообще не появляется, т.к. метод синхронный
             Application.Current.Dispatcher.Invoke(DispatcherPriority.Background, new ThreadStart(delegate { }));
 
-            if (!url.StartsWith("http://")) url = "http://" + url;
+            if (!url.StartsWith("http://") && !url.StartsWith("https://")) url = "http://" + url;
 
             Sites.ISite site = Sites.SitesDetector.GetSite(url);
+
+            if (site == null)
+            {
+                _logger.Add("Указан незнакомый адрес/домен/протокол.", true, true);
+                return null;
+            }
+
 
             // Если URL заканчивается на index.shtml, преобразовать его в нужный)
             url = site.PrepareAuthorUrlOnAdding(url);
 
+         
             Author author = Authors.FindAuthor(url);
             if (author != null)
             {
@@ -344,14 +502,152 @@ namespace SIinformer.Logic
 
         private static void UpdateAuthors(bool manualProcessing=false)
         {
+            if (manualProcessing && StatServerUpdating)
+                StopUpdating();
+            else
+
+            {
+                _logger.Working = true;
+                UpdateAuthorsFromStatServer(manualProcessing, () =>
+                                                              {
+                                                                  StatServerUpdating = false;
+                                                                  if (_setting.UseMessageBroker)
+                                                                    _logger.Add(string.Format("{0} Проверка авторов с сервера статистики окончена", DateTime.Now.ToShortTimeString()));
+                                                                  if (!manualProcessing)
+                                                                      UpdateAuthorsFromSI(manualProcessing);
+                                                                  else
+                                                                  {
+                                                                      UpdaterComplete(null, new RunWorkerCompletedEventArgs("",null,false));
+                                                                      _logger.Working = false;                                                                     
+                                                                  }
+                                                              });}            
+        }
+        /// <summary>
+        /// Проверить произвольных авторов параллельно и независимо
+        /// </summary>
+        /// <param name="authors"></param>
+        /// <param name="updater"></param>
+        public static void UpdateAuthors(List<Author> authors, Updater updater)
+        {
+            _logger.Working = true;
+            if (_setting.UseMessageBroker)
+            {
+                StatServerUpdating = true;
+                RecursiveAsyncUpdateAuthorFromStatServer(0, authors, () =>
+                                                                         {
+                                                                             StatServerUpdating = false;
+                                                                             updater.RunWorkerAsync(authors);
+                                                                         });
+            }
+            else
+                updater.RunWorkerAsync(authors);
+        }
+
+        /// <summary>
+        /// проверка авторов с сервера статистики информатора
+        /// </summary>
+        private static void UpdateAuthorsFromStatServer(bool manualProcessing, Action completed)
+        {
+
+            if (!_setting.UseMessageBroker)
+            {
+                completed();
+                return;
+            }
+            Save();
+            // выбираем авторов, время проверки которых подошло или, если запущен ручной режим проверки - всех авторов
+            var updatedAuthor = Authors.Where(author => !author.IsIgnored && !author.IsDeleted && (manualProcessing || author.NextCheckDate < DateTime.Now)).ToList();
+            if (updatedAuthor.Count == 0)
+            {
+                UpdateIntervalAndStart();
+                completed();
+                return;
+            }
+            StatServerUpdating = true;   
+            RecursiveAsyncUpdateAuthorFromStatServer(0, updatedAuthor, completed);
+        }
+
+        private static void RecursiveAsyncUpdateAuthorFromStatServer(int counter, List<Author> authors, Action completed)
+        {
+            if (counter == authors.Count)
+            {
+                completed();
+                return;
+            }
+            var author = authors[counter++];
+            _logger.Add(string.Format("StatServer {0}> Проверяется автор {1}...", DateTime.Now.ToShortTimeString(), author.Name));
+            ApiStuff.ApiManager.GetInstance().GetAuthorUpdatesInfo(_logger, _setting, author.URL, author.ServerStamp, 
+                (serverStamp, transportBooks) =>
+                    {
+                        var booksArrived = 0;
+                        if (transportBooks != null && transportBooks.Count > 0)
+                        {
+                            foreach (var transportBook in transportBooks)
+                            {
+                                ProcessArrivedBook(transportBook, false);
+                                booksArrived++;
+                            }
+                            _messageBrokerTrayInfoCollectorTimer.Start();
+                        }
+                            // если обнов нет, а штамп сервера больше, то есть уже ктото проверил автора, маркируем локального автора, что проверен и высчитываем для него новую дату проверки
+                            if (serverStamp > author.ServerStamp)
+                            {
+                                var convertedTime = new DateTime(serverStamp, DateTimeKind.Utc).ToLocalTime();
+                                author.LastCheckDate = convertedTime;
+                                try
+                                {
+
+                                    var elasticScheduler = new ElasticScheduler(_logger, _setting);
+                                    elasticScheduler.MakePlan(author);
+                                    elasticScheduler.SaveStatistics();
+                                    if (author.NextCheckDate<DateTime.Now)
+                                        _logger.Add(string.Format(
+                                                "StatServer {3}> Автор {0} уже проверен {1}. Получено {2} обновлений книг, однако требуется обращение на оригинальный сайт автора для уточнения информации",
+                                                author.Name, author.LastCheckDate, booksArrived, DateTime.Now.ToShortTimeString()), false);
+                                    else
+                                    _logger.Add(string.Format(
+                                            "StatServer {4}> Автор {0} уже проверен {1}. Получено {2} обновлений книг. Следующее время нашей проверки:{3}",
+                                            author.Name, author.LastCheckDate, booksArrived, author.NextCheckDate, DateTime.Now.ToShortTimeString()), false);
+
+                                    author.ServerStamp = serverStamp; // ставим штамп сервера
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.Add(string.Format("Ошибка формирования плана проверок автора {0} - {1}",
+                                                              author.Name, ex));
+                                }
+                            }
+                            else
+                            {
+                                _logger.Add(string.Format("StatServer {1}> Автора {0} никто не проверял. Будет произведено обращение на оригинальный сайт автора", author.Name, DateTime.Now.ToShortTimeString()), false);
+                            }
+                        if (_logger.Working)
+                            RecursiveAsyncUpdateAuthorFromStatServer(counter, authors, completed);// запускаем проверку следующего автора. если авторы закончились - упраление вернется в completed()
+                      
+                    },
+                    (error) =>
+                        {
+                            _logger.Add(error, true);
+                            RecursiveAsyncUpdateAuthorFromStatServer(counter, authors, completed); // запускаем проверку следующего автора. если авторы закончились - упраление вернется в completed()
+                        }
+                );
+        }
+
+        /// <summary>
+        /// проверка авторов парсингом СИ
+        /// </summary>
+        /// <param name="manualProcessing"></param>
+        private static void UpdateAuthorsFromSI(bool manualProcessing)
+        {
             if (!_updater.IsBusy)
             {
-                Save();                
+                Save();
                 // выбираем авторов, время проверки которых подошло или, если запущен ручной режим проверки - всех авторов
-                var updatedAuthor = Authors.Where(author => !author.IsIgnored && !author.IsDeleted && (manualProcessing ? true : author.NextCheckDate<DateTime.Now)).ToList();
+                var updatedAuthor = Authors.Where(author => !author.IsIgnored && !author.IsDeleted && (manualProcessing || author.NextCheckDate < DateTime.Now)).ToList();
                 if (updatedAuthor.Count == 0)
                 {
                     UpdateIntervalAndStart();
+                    _logger.Working = false;
                     return;
                 }
                 _logger.Add("Производится проверка обновлений книг...");
@@ -370,7 +666,8 @@ namespace SIinformer.Logic
                     _logger.Add(string.Format("Ошибка при запуске '{0}'.", _setting.AfterUpdater.Trim()), false, true);
                 }
                 _updater.RunWorkerAsync(updatedAuthor);
-            }
+            } else
+                _logger.Working = false;
         }
 
         public static void CancelUpdater()
@@ -381,14 +678,19 @@ namespace SIinformer.Logic
         /// <summary>
         /// Вручную останавливает или запускает обновление в зависимости от текущего состояния
         /// </summary>
-        public static void ManualProcessing()
+        public static void ManualProcessing(bool directUpdateing = false) // directUpdateing - проверять напрямую с родного сайта
         {
-            if (_updater.IsBusy)
+            if (_updater.IsBusy || StatServerUpdating)
             {
                 StopUpdating();
             }
             else
-                UpdateAuthors(true);
+            {
+                if (!directUpdateing)
+                    UpdateAuthors(true);
+                else
+                    UpdateAuthorsFromSI(true);
+            }
         }
 
         public static bool IsBusy()
@@ -402,7 +704,13 @@ namespace SIinformer.Logic
             {
                 _logger.Add("Проверка обновлений останавливается...");
                 _updater.CancelAsync();
-            }            
+            }
+            else
+            {
+                _logger.Working = false;
+                StatServerUpdating = false;
+                _logger.Add("Проверка обновлений остановлена.");
+            }
         }
 
         #region Перестройка представления данных
@@ -590,6 +898,8 @@ namespace SIinformer.Logic
         #region внутренние переменные
 
         private static Timer _updateTimer;
+        private static Timer _messageBrokerTrayInfoCollectorTimer;
+        private static string _messageBrokerTrayInfo = "";
         private static Updater _updater;
         private static Setting _setting;
 

@@ -9,8 +9,13 @@ namespace SIinformer.Window
     {
         public ErrorWindow(string text)
         {
-            InitializeComponent();
-            infoTextBox.Text = text;
+            try
+            {
+                InitializeComponent();
+                infoTextBox.Text = text;
+            }
+            catch 
+            {}
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)

@@ -33,6 +33,9 @@ namespace SIinformer.Logic.Sites
                     if (string.IsNullOrWhiteSpace(author.AlternateURL) && author.URL.Contains("http://www.fanfiction.net/atom/u/"))
                         author.AlternateURL = author.URL.Replace("http://www.fanfiction.net/atom/u/",
                                                                  "http://www.fanfiction.net/u/");
+                    if (string.IsNullOrWhiteSpace(author.AlternateURL) && author.URL.Contains("https://www.fanfiction.net/atom/u/"))
+                        author.AlternateURL = author.URL.Replace("https://www.fanfiction.net/atom/u/",
+                                                                 "https://www.fanfiction.net/u/");
 
 
                     var authorTemp = new Author { UpdateDate = author.UpdateDate };
@@ -101,6 +104,12 @@ namespace SIinformer.Logic.Sites
                                     txt.SizeOld = OldSize;
                                     // да, автор обновился 
                                     authorTemp.UpdateDate = DateTime.Now;
+                                    
+                                    //#region Отсылка информации об обновлении в шину брокера сообщений
+                                    //MessageBroker.HiLevelManager.Manager.GetInstance().PublishMessageUpdatedBook(txt, author.URL, author.Name);
+                                    //#endregion
+                                    // отсылка инормации об обновлении на сервер статистики
+                                    SIinformer.ApiStuff.ApiManager.GetInstance().PublishMessageUpdatedBook(MainWindow.MainForm.GetLogger(), MainWindow.GetSettings(), txt, author.URL, author.Name);
                                 }
                             }
                             // доп проверка по количеству произведений
@@ -110,6 +119,9 @@ namespace SIinformer.Logic.Sites
                                 authorTemp.UpdateDate = feed.LastUpdatedTime.LocalDateTime;
                             }
                         }
+
+                        // отсылка информации о книгах (не обновленные. обновленные идут отдельным вызовом) на сервер статистики
+                        SIinformer.ApiStuff.ApiManager.GetInstance().SetBooksInfo(MainWindow.MainForm.GetLogger(), MainWindow.GetSettings(), authorTemp.Texts.Where(b=>!b.IsNew).ToList(), author.URL, author.Name);
 
                         context.Post(Author.SyncRun, new Author.RunContent { Renewed = author, New = authorTemp });
 
@@ -193,6 +205,20 @@ namespace SIinformer.Logic.Sites
             }
         }
 
+        public List<string> GetKnownDomens()
+        {
+            var domens = new List<string>
+                             {
+                                 "http://www.fanfiction.net",
+                                 "https://www.fanfiction.net"
+                             };
+            return domens;
+        }
+
+        public List<string> GetUrlVariants(string url)
+        {
+            return new List<string>{url};
+        }
 
         #region Очистка текста о книге от лишних данных
 

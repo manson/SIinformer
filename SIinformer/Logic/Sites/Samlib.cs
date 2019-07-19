@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using SIinformer.Utils;
+using SIinformer.Window;
 
 namespace SIinformer.Logic.Sites
 {
@@ -92,6 +93,12 @@ namespace SIinformer.Logic.Sites
                             txt.SizeOld = OldSize;
                             // да, автор обновился 
                             authorTemp.UpdateDate = DateTime.Now;
+                            
+                            //#region Отсылка информации об обновлении в шину брокера сообщений
+                            //MessageBroker.HiLevelManager.Manager.GetInstance().PublishMessageUpdatedBook(txt, author.URL, author.Name);
+                            //#endregion
+                            // отсылка инормации об обновлении на сервер статистики
+                            SIinformer.ApiStuff.ApiManager.GetInstance().PublishMessageUpdatedBook(MainWindow.MainForm.GetLogger(), MainWindow.GetSettings(), txt, author.URL, author.Name);
                         }
                     }
                     // доп проверка по количеству произведений
@@ -101,6 +108,9 @@ namespace SIinformer.Logic.Sites
                         authorTemp.UpdateDate = DateTime.Now;
                     }
                 }
+
+                // отсылка информации о книгах (не обновленные. обновленные идут отдельным вызовом) на сервер статистики
+                SIinformer.ApiStuff.ApiManager.GetInstance().SetBooksInfo(MainWindow.MainForm.GetLogger(), MainWindow.GetSettings(), authorTemp.Texts.Where(b=>!b.IsNew).ToList(), author.URL, author.Name);
 
                 context.Post(Author.SyncRun, new Author.RunContent { Renewed = author, New = authorTemp });
 
@@ -130,6 +140,8 @@ namespace SIinformer.Logic.Sites
         {
             if (url.EndsWith("index.shtml"))
                 url = url.Replace("index.shtml", "indextitle.shtml");
+            if (url.EndsWith("indexdate.shtml"))
+                url = url.Replace("indexdate.shtml", "indextitle.shtml");
 
             if (url.EndsWith("indexvote.shtml"))
                 url = url.Replace("indexvote.shtml", "indextitle.shtml");
@@ -200,6 +212,41 @@ namespace SIinformer.Logic.Sites
         public int GetSupportedReaderNumber(int suggestedNumber)
         {
             return suggestedNumber;
+        }
+
+        public List<string> GetKnownDomens()
+        {
+            var domens = new List<string>
+                             {
+                                 "http://samlib.ru",
+                                 "http://zhurnal.lib.ru",
+                                 "http://budclub.ru",
+                             };
+            return domens;
+        }
+
+        public List<string> GetUrlVariants(string url)
+        {
+            var urls = new List<string>();
+            urls.Add(url);
+            // запомнили страничку
+            var page = url.EndsWith(@"/") ? "" : url.Substring(url.LastIndexOf(@"/", System.StringComparison.Ordinal) + 1);
+            // запомнили чистый урл без протокола и домена
+            var pureUrl = url.Replace("http://", "");
+            pureUrl = pureUrl.Substring(0, pureUrl.Length - page.Length); // убираем страничку
+            pureUrl = pureUrl.Substring(pureUrl.IndexOf(@"/", System.StringComparison.Ordinal));
+            // получаем все известные нам домены
+            var knownDomens =GetKnownDomens();
+            foreach (var knownDomen in knownDomens)
+            {
+                var newUrl = knownDomen + pureUrl;
+                if (!urls.Contains(newUrl + "indextitle.shtml"))
+                    urls.Add(newUrl + "indextitle.shtml");
+                if (!urls.Contains(newUrl + "indexdate.shtml"))
+                    urls.Add(newUrl + "indexdate.shtml");
+            }
+            return urls;
+            
         }
 
         #region Нормализация строк
